@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta
+      name="description"
+      content="Flavora — домашний кулинарный блокнот: 50 рецептов с пошаговыми иллюстрациями, избранное и меню на неделю."
+    />
+    <meta name="color-scheme" content="light dark" />
+    <title>Flavora — домашние рецепты</title>
+    <script>
+      (function () {
+        var theme = null;
+        try {
+          theme = window.localStorage.getItem('flavora.theme.v1');
+        } catch (error) {
+          theme = null;
+        }
+        if (theme !== 'light' && theme !== 'dark') {
+          theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        document.documentElement.dataset.theme = theme;
+      })();
+    </script>
+    <link rel="stylesheet" href="styles/tokens.css" />
+    <link rel="stylesheet" href="styles/base.css" />
+    <link rel="stylesheet" href="styles/layout.css" />
+    <link rel="stylesheet" href="styles/components.css" />
+    <link rel="stylesheet" href="styles/cards.css" />
+    <link rel="stylesheet" href="styles/views/catalog.css" />
+    <link rel="stylesheet" href="styles/views/favorites.css" />
+    <link rel="stylesheet" href="styles/views/recipe.css" />
+    <link rel="stylesheet" href="styles/views/menu.css" />
+    <script type="module" src="scripts/app.js"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#app">Перейти к содержимому</a>
+    <header class="site-header">
+      <div class="site-header__inner container">
+        <a class="site-logo" href="#/recipes" aria-label="Flavora — к рецептам">Flavora</a>
+        <nav class="site-nav" aria-label="Основные разделы">
+          <ul class="site-nav__list">
+            <li><a class="site-nav__link" href="#/recipes" data-nav="recipes">Рецепты</a></li>
+            <li><a class="site-nav__link" href="#/favorites" data-nav="favorites">Избранное</a></li>
+            <li><a class="site-nav__link" href="#/menu" data-nav="menu">Меню на неделю</a></li>
+          </ul>
+        </nav>
+        <div class="site-header__tools">
+          <button class="icon-button" id="theme-toggle" type="button" aria-label="Переключить тему">
+            <span aria-hidden="true">☼</span>
+          </button>
+        </div>
+      </div>
+    </header>
+    <main class="site-main container" id="app" tabindex="-1">
+      <noscript>
+        <section class="noscript-note">
+          <h1>Flavora — домашний кулинарный блокнот</h1>
+          <p>
+            Каталог рецептов, избранное и меню на неделю работают на JavaScript. Включите его в
+            настройках браузера и обновите страницу, чтобы открыть рецепты.
+          </p>
+        </section>
+      </noscript>
+    </main>
+    <div class="toast-region" id="toast-region" role="status" aria-live="polite"></div>
+  </body>
+</html>

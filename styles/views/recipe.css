@@ -1,0 +1,5 @@
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch-target);
+}

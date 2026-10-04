@@ -1,0 +1,79 @@
+:root {
+  --color-bg: #f8f4ec;
+  --color-surface: #fffdf8;
+  --color-surface-muted: #f1ebe0;
+  --color-text: #221b17;
+  --color-text-muted: #62574e;
+  --color-accent: #7b1e33;
+  --color-accent-soft: #f6e3e4;
+  --color-on-accent: #fffaf3;
+  --color-ink: #2a2422;
+  --color-on-ink: #fffaf3;
+  --color-border: #ddd4c6;
+  --color-border-strong: #b9ad9c;
+  --color-focus: #7b1e33;
+  --color-success: #2f6a3f;
+  --color-error: #a3261f;
+  --color-overlay: rgb(34 27 23 / 45%);
+
+  --font-script: 'Marck Script', 'Caveat', 'Segoe Script', cursive;
+  --font-hand: 'Caveat', 'Segoe Print', 'Comic Sans MS', cursive;
+
+  --text-display: clamp(2.125rem, 1.4rem + 3.2vw, 4rem);
+  --text-title: clamp(1.75rem, 1.45rem + 1.3vw, 2.5rem);
+  --text-heading: clamp(1.5rem, 1.4rem + 0.45vw, 1.875rem);
+  --text-body: clamp(1.3125rem, 1.25rem + 0.3vw, 1.5rem);
+  --text-small: clamp(1.125rem, 1.1rem + 0.15vw, 1.25rem);
+  --leading-tight: 1.15;
+  --leading-heading: 1.25;
+  --leading-body: 1.45;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4rem;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+
+  --container-max: 86rem;
+  --container-pad: clamp(1rem, 0.4rem + 2.6vw, 3.25rem);
+  --touch-target: 2.75rem;
+
+  --shadow-soft: 0 8px 24px rgb(34 27 23 / 10%);
+
+  --z-header: 10;
+  --z-dialog: 100;
+  --z-toast: 200;
+
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-panel: 280ms;
+  --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+:root[data-theme='dark'] {
+  --color-bg: #1f1b19;
+  --color-surface: #29241f;
+  --color-surface-muted: #332d28;
+  --color-text: #f3ebde;
+  --color-text-muted: #c4b8a8;
+  --color-accent: #f2a3b3;
+  --color-accent-soft: #46262d;
+  --color-on-accent: #2a1218;
+  --color-ink: #efe6d8;
+  --color-on-ink: #221b17;
+  --color-border: #453d37;
+  --color-border-strong: #6b6058;
+  --color-focus: #f2a3b3;
+  --color-success: #9bd0a6;
+  --color-error: #f3a199;
+  --color-overlay: rgb(0 0 0 / 60%);
+  --shadow-soft: 0 8px 24px rgb(0 0 0 / 35%);
+}
