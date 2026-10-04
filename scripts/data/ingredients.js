@@ -53,6 +53,19 @@ export const ingredients = Object.freeze({
   dill: { name: 'Укроп' },
   'bay-leaf': { name: 'Лавровый лист' },
   nutmeg: { name: 'Мускатный орех' },
+  'chicken-fillet': { name: 'Куриное филе' },
+  'canned-tuna': { name: 'Консервированный тунец' },
+  'canned-beans': { name: 'Консервированная фасоль' },
+  'green-peas': { name: 'Консервированный зелёный горошек' },
+  cucumber: { name: 'Огурцы' },
+  pickles: { name: 'Солёные огурцы' },
+  'red-onion': { name: 'Красный лук' },
+  romaine: { name: 'Салат романо' },
+  olives: { name: 'Маслины' },
+  feta: { name: 'Фета' },
+  mozzarella: { name: 'Моцарелла' },
+  'caesar-dressing': { name: 'Соус «Цезарь»' },
+  oregano: { name: 'Сушёный орегано' },
 });
 
 export function getIngredientName(ingredientId) {
