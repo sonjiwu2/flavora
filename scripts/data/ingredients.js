@@ -66,6 +66,13 @@ export const ingredients = Object.freeze({
   mozzarella: { name: 'Моцарелла' },
   'caesar-dressing': { name: 'Соус «Цезарь»' },
   oregano: { name: 'Сушёный орегано' },
+  'ground-beef': { name: 'Говяжий фарш' },
+  guanciale: { name: 'Гуанчиале' },
+  pecorino: { name: 'Пекорино романо' },
+  fettuccine: { name: 'Феттучине' },
+  macaroni: { name: 'Макароны-рожки' },
+  'lasagna-sheets': { name: 'Листы лазаньи' },
+  celery: { name: 'Стебли сельдерея' },
 });
 
 export function getIngredientName(ingredientId) {
