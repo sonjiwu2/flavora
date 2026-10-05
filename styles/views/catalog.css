@@ -272,3 +272,18 @@ legend.filters-panel__legend {
     display: none;
   }
 }
+
+@media (forced-colors: active) {
+  .catalog__toggle[aria-pressed='true'],
+  .filters-panel__option[aria-pressed='true'] {
+    border-color: Highlight;
+    background: Highlight;
+    color: HighlightText;
+    forced-color-adjust: none;
+  }
+
+  .product-field__option[aria-selected='true'] {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+}

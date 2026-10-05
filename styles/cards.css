@@ -275,3 +275,15 @@
 :root[data-motion='reduce'] .favorite-button:active .favorite-button__icon {
   transform: none;
 }
+
+@media (forced-colors: active) {
+  .favorite-button[aria-pressed='true'] .favorite-button__outline,
+  .favorite-button__fill {
+    color: Highlight;
+  }
+
+  .category-tabs::before,
+  .category-tabs::after {
+    display: none;
+  }
+}
