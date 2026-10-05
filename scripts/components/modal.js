@@ -3,8 +3,27 @@ import { icon } from './icons.js';
 import { moveToastRegion } from './toast.js';
 
 const VARIANTS = ['center', 'side'];
+const TRIGGER_SELECTOR = 'button, a[href], input, select, textarea, summary, [tabindex]';
+const TRIGGER_MEMORY_MS = 1000;
 const openDialogs = [];
+const lastActivation = { control: null, time: 0 };
 let dialogCount = 0;
+
+document.addEventListener(
+  'click',
+  (event) => {
+    const target = event.target instanceof Element ? event.target : null;
+    lastActivation.control = target?.closest(TRIGGER_SELECTOR) ?? null;
+    lastActivation.time = performance.now();
+  },
+  true,
+);
+
+function findOpener() {
+  if (!hasLostFocus()) return document.activeElement;
+  const isRecent = performance.now() - lastActivation.time < TRIGGER_MEMORY_MS;
+  return isRecent ? lastActivation.control : null;
+}
 
 function lockPageScroll() {
   const root = document.documentElement;
@@ -49,7 +68,7 @@ export function closeAllDialogs() {
 
 export function openDialog({ title, body, footer = null, variant = 'center', onClose }) {
   dialogCount += 1;
-  const opener = document.activeElement;
+  const opener = findOpener();
   const titleId = `dialog-title-${dialogCount}`;
   const layout = VARIANTS.includes(variant) ? variant : VARIANTS[0];
   const closeButton = el(
