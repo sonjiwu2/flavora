@@ -147,8 +147,10 @@ legend.filters-panel__legend {
 }
 
 .filters-panel__actions {
+  --filters-action-min: 7rem;
+
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--filters-action-min)), 1fr));
   gap: var(--space-3);
 }
 
@@ -230,6 +232,7 @@ legend.filters-panel__legend {
 
 @container recipe-list (width < 40rem) {
   .catalog__quick {
+    flex-wrap: wrap;
     justify-self: stretch;
   }
 
