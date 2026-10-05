@@ -154,8 +154,9 @@ export function createCategoryTabs({ label, selected = null, onSelect }) {
   }
 
   function revealButton(button) {
-    const start = button.offsetLeft;
-    const end = start + button.offsetWidth;
+    const edgeInset = buttons[0].offsetLeft;
+    const start = button.offsetLeft - edgeInset;
+    const end = button.offsetLeft + button.offsetWidth + edgeInset;
     if (start < list.scrollLeft) list.scrollLeft = start;
     else if (end > list.scrollLeft + list.clientWidth) list.scrollLeft = end - list.clientWidth;
   }
@@ -195,8 +196,8 @@ export function createCategoryTabs({ label, selected = null, onSelect }) {
   }
 
   const stopScroll = listen(list, 'scroll', updateEdges, { passive: true });
+  const stopWindowResize = listen(window, 'resize', handleResize);
   const observer = new ResizeObserver(handleResize);
-  observer.observe(element);
   buttons.forEach((button) => observer.observe(button));
   setSelected(selected);
 
@@ -205,6 +206,7 @@ export function createCategoryTabs({ label, selected = null, onSelect }) {
     setSelected,
     dispose() {
       stopScroll();
+      stopWindowResize();
       observer.disconnect();
     },
   };

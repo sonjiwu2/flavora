@@ -260,6 +260,7 @@ export function mount(outlet, route) {
   }
 
   function openPanel() {
+    filtersButton.focus({ preventScroll: true });
     panel = openFiltersPanel({
       filters,
       onApply: (nextFilters) => apply(nextFilters),
