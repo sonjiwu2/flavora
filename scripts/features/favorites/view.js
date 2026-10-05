@@ -12,8 +12,10 @@ import {
 } from '../catalog/controls.js';
 import { selectRecipes } from '../catalog/filter-recipes.js';
 import { FAVORITE_SORTS, formatSavedCount } from '../catalog/filter-state.js';
+import { rememberScroll } from '../catalog/scroll-memory.js';
 
 const EAGER_CARD_COUNT = 3;
+const SCROLL_STATE_KEY = 'favoritesScroll';
 
 const TEXT = Object.freeze({
   title: 'Избранное',
@@ -53,6 +55,7 @@ function readSavedRecipes() {
 export function mount(outlet) {
   const disposer = createDisposer();
   const cards = new Map();
+  const scrollMemory = rememberScroll(SCROLL_STATE_KEY);
   let view = savedView;
 
   setPageTitle(TEXT.title);
@@ -179,6 +182,8 @@ export function mount(outlet) {
     if (focusedIndex !== -1 && !focusedCard.isConnected) restoreFocus(focusedIndex);
   }
 
+  disposer.add(scrollMemory.dispose);
+  disposer.add(listen(grid, 'click', scrollMemory.save, { capture: true }));
   disposer.add(search.dispose);
   disposer.add(tabs.dispose);
   disposer.add(announcer.dispose);
@@ -214,5 +219,6 @@ export function mount(outlet) {
   );
 
   render();
+  scrollMemory.restore();
   return disposer.dispose;
 }

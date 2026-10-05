@@ -28,10 +28,12 @@ import {
   toggleQuickTime,
 } from './filter-state.js';
 import { openFiltersPanel } from './filters-panel.js';
+import { rememberScroll } from './scroll-memory.js';
 
 const ROUTE_PATH = '/recipes';
 const EAGER_CARD_COUNT = 3;
 const ADDRESS_DELAY_MS = 300;
+const SCROLL_STATE_KEY = 'catalogScroll';
 
 const TEXT = Object.freeze({
   title: 'Рецепты',
@@ -76,6 +78,7 @@ export function mount(outlet, route) {
   const disposer = createDisposer();
   const cards = new Map();
   const coarsePointer = window.matchMedia('(pointer: coarse)');
+  const scrollMemory = rememberScroll(SCROLL_STATE_KEY);
   let filters = readInitialFilters(route);
   let panel = null;
   let addressTimer = null;
@@ -274,6 +277,8 @@ export function mount(outlet, route) {
     if (coarsePointer.matches) search.input.blur();
   }
 
+  disposer.add(scrollMemory.dispose);
+  disposer.add(listen(grid, 'click', scrollMemory.save, { capture: true }));
   disposer.add(search.dispose);
   disposer.add(tabs.dispose);
   disposer.add(announcer.dispose);
@@ -308,5 +313,6 @@ export function mount(outlet, route) {
   savedFilters = filters;
   render();
   writeAddress();
+  scrollMemory.restore();
   return disposer.dispose;
 }
