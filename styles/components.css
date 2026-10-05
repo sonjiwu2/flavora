@@ -249,6 +249,7 @@
   max-width: 100%;
   min-height: var(--touch-target);
   padding-inline: var(--space-4);
+  border: 1px solid transparent;
   border-radius: var(--radius-sm);
   background: var(--color-surface-muted);
   color: var(--color-text);
@@ -711,6 +712,7 @@
 .toast {
   max-width: min(30rem, 100%);
   padding: var(--space-2) var(--space-5);
+  border: 1px solid transparent;
   border-radius: var(--radius-md);
   background: var(--color-ink);
   color: var(--color-on-ink);
@@ -743,5 +745,27 @@
   from {
     opacity: 0;
     transform: translateY(0.5rem);
+  }
+}
+
+@media (forced-colors: active) {
+  .tabs__item::after,
+  .switch__track::after {
+    background: buttontext;
+    forced-color-adjust: none;
+  }
+
+  .tabs--boxed .tabs__item[aria-pressed='true'],
+  .choice__input:checked + .choice__label,
+  .switch__input:checked + .switch__track {
+    border-color: highlight;
+    background: highlight;
+    color: highlighttext;
+    forced-color-adjust: none;
+  }
+
+  .switch__input:checked + .switch__track::after {
+    border-color: highlighttext;
+    background: highlighttext;
   }
 }
