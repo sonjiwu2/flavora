@@ -72,7 +72,7 @@ export function createActionsMenu({ label, actions }) {
       actions[index].onSelect();
     });
   });
-  toggle.addEventListener('mousedown', (event) => event.preventDefault());
+  element.addEventListener('mousedown', (event) => event.preventDefault());
   toggle.addEventListener('click', () => {
     if (isOpen()) closeAndFocusToggle();
     else open();
