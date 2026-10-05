@@ -1,6 +1,7 @@
 import { createRouter } from './core/router.js';
 import { initSkipLink, markActiveSection } from './features/shell/header.js';
 import { initMotion } from './features/shell/motion.js';
+import { createScreenChangeHandler } from './features/shell/screen-change.js';
 import { openSettings } from './features/shell/settings.js';
 import { initStorageNotice } from './features/shell/storage-notice.js';
 import { initTheme } from './features/shell/theme.js';
@@ -23,6 +24,7 @@ const routes = [
 const fallback = { name: 'not-found', load: () => import('./features/shell/not-found.js') };
 
 const outlet = document.querySelector('#app');
+const handleScreenChange = createScreenChangeHandler(outlet);
 
 initStorageNotice();
 initMotion();
@@ -34,5 +36,8 @@ createRouter({
   routes,
   fallback,
   outlet,
-  onChange: markActiveSection,
+  onChange(route) {
+    markActiveSection(route);
+    handleScreenChange(route);
+  },
 }).start();
