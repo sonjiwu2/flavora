@@ -81,6 +81,10 @@ export const ingredients = Object.freeze({
   ginger: { name: 'Свежий имбирь' },
   'curry-powder': { name: 'Приправа карри' },
   breadcrumbs: { name: 'Панировочные сухари' },
+  salmon: { name: 'Филе лосося' },
+  cod: { name: 'Филе трески' },
+  'pike-perch': { name: 'Судак' },
+  shrimp: { name: 'Креветки' },
 });
 
 export function getIngredientName(ingredientId) {
