@@ -1,6 +1,7 @@
 import { createRouter } from './core/router.js';
 import { initSkipLink, markActiveSection } from './features/shell/header.js';
 import { initMotion } from './features/shell/motion.js';
+import { openSettings } from './features/shell/settings.js';
 import { initStorageNotice } from './features/shell/storage-notice.js';
 import { initTheme } from './features/shell/theme.js';
 
@@ -27,6 +28,7 @@ initStorageNotice();
 initMotion();
 initTheme(document.querySelector('#theme-toggle'));
 initSkipLink(outlet);
+document.querySelector('#settings-open').addEventListener('click', openSettings);
 
 createRouter({
   routes,
