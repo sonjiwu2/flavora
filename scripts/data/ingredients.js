@@ -92,6 +92,12 @@ export const ingredients = Object.freeze({
   tahini: { name: 'Тахини' },
   coriander: { name: 'Молотый кориандр' },
   'provence-herbs': { name: 'Прованские травы' },
+  'dry-yeast': { name: 'Сухие дрожжи' },
+  'baking-powder': { name: 'Разрыхлитель' },
+  'powdered-sugar': { name: 'Сахарная пудра' },
+  suluguni: { name: 'Сулугуни' },
+  apple: { name: 'Яблоки' },
+  blueberries: { name: 'Черника' },
 });
 
 export function getIngredientName(ingredientId) {
