@@ -111,3 +111,12 @@
     --duration-panel: 0ms;
   }
 }
+
+@media (prefers-contrast: more) {
+  :root,
+  :root[data-theme='dark'] {
+    --color-border: var(--color-border-strong);
+    --color-text-muted: var(--color-text);
+    --color-text-disabled: var(--color-border-strong);
+  }
+}
