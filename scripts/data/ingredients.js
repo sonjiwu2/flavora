@@ -73,6 +73,14 @@ export const ingredients = Object.freeze({
   macaroni: { name: 'Макароны-рожки' },
   'lasagna-sheets': { name: 'Листы лазаньи' },
   celery: { name: 'Стебли сельдерея' },
+  'ground-chicken': { name: 'Куриный фарш' },
+  rice: { name: 'Рис' },
+  passata: { name: 'Томатное пюре (пассата)' },
+  'beef-broth': { name: 'Говяжий бульон' },
+  'coconut-milk': { name: 'Кокосовое молоко' },
+  ginger: { name: 'Свежий имбирь' },
+  'curry-powder': { name: 'Приправа карри' },
+  breadcrumbs: { name: 'Панировочные сухари' },
 });
 
 export function getIngredientName(ingredientId) {
