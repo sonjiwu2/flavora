@@ -3,6 +3,14 @@ import { el, listen } from '../../utils/dom.js';
 import { createChip, focusAfterRemoval } from './controls.js';
 import { suggestIngredients } from './filter-state.js';
 
+const TEXT = Object.freeze({
+  allSelected: 'Все продукты уже выбраны',
+  noMatch: 'Такого продукта нет в рецептах',
+  added: 'Добавлено: ',
+  removed: 'Убрано: ',
+  removeLabel: 'Убрать: ',
+});
+
 let fieldCount = 0;
 
 export function createProductField({
@@ -42,6 +50,7 @@ export function createProductField({
     'aria-label': label,
     hidden: true,
   });
+  const emptyNote = el('p', { class: 'product-field__empty', hidden: true });
   const combo = el(
     'div',
     { class: 'product-field__combo' },
@@ -53,13 +62,14 @@ export function createProductField({
       input,
     ),
     listbox,
+    emptyNote,
   );
   const chips = el('ul', { class: 'product-field__chips', 'aria-label': chipsLabel, hidden: true });
   const status = el('p', { class: 'visually-hidden', role: 'status' });
   const element = el('div', { class: 'product-field' }, combo, chips, status);
 
   function isOpen() {
-    return !listbox.hidden;
+    return !listbox.hidden || !emptyNote.hidden;
   }
 
   function setActive(index) {
@@ -79,6 +89,7 @@ export function createProductField({
 
   function close() {
     listbox.hidden = true;
+    emptyNote.hidden = true;
     listbox.replaceChildren();
     suggestions = [];
     input.setAttribute('aria-expanded', 'false');
@@ -88,7 +99,7 @@ export function createProductField({
   function choose(option) {
     input.value = '';
     close();
-    status.textContent = `Добавлено: ${option.name}`;
+    status.textContent = `${TEXT.added}${option.name}`;
     onAdd(option.id);
   }
 
@@ -111,21 +122,16 @@ export function createProductField({
 
   function open({ activate = 'first' } = {}) {
     suggestions = suggestIngredients(options, input.value, selectedIds);
-    if (suggestions.length === 0) {
-      listbox.replaceChildren(
-        el(
-          'li',
-          { class: 'product-field__empty', role: 'presentation' },
-          input.value.trim() === '' ? 'Все продукты уже выбраны' : 'Такого продукта нет в рецептах',
-        ),
-      );
-    } else {
-      listbox.replaceChildren(...suggestions.map(createOption));
-    }
-    listbox.hidden = false;
-    input.setAttribute('aria-expanded', 'true');
+    const hasSuggestions = suggestions.length > 0;
+    const emptyText = input.value.trim() === '' ? TEXT.allSelected : TEXT.noMatch;
+    listbox.replaceChildren(...suggestions.map(createOption));
+    listbox.hidden = !hasSuggestions;
+    emptyNote.hidden = hasSuggestions;
+    emptyNote.textContent = hasSuggestions ? '' : emptyText;
+    if (!hasSuggestions) status.textContent = emptyText;
+    input.setAttribute('aria-expanded', String(hasSuggestions));
     const initialIndex = { first: 0, last: suggestions.length - 1, none: -1 }[activate];
-    setActive(suggestions.length > 0 ? initialIndex : -1);
+    setActive(hasSuggestions ? initialIndex : -1);
     combo.scrollIntoView({ block: coarsePointer.matches ? 'start' : 'nearest' });
   }
 
@@ -169,7 +175,10 @@ export function createProductField({
   function renderChips() {
     const created = selectedIds.map((id) => {
       const name = namesById.get(id) ?? id;
-      return createChip(name, { removeLabel: `Убрать: ${name}`, onRemove: () => remove(id) });
+      return createChip(name, {
+        removeLabel: `${TEXT.removeLabel}${name}`,
+        onRemove: () => remove(id),
+      });
     });
     chips.replaceChildren(...created.map((chip) => chip.element));
     chips.hidden = created.length === 0;
@@ -178,7 +187,7 @@ export function createProductField({
 
   function remove(id) {
     const removedIndex = selectedIds.indexOf(id);
-    status.textContent = `Убрано: ${namesById.get(id) ?? id}`;
+    status.textContent = `${TEXT.removed}${namesById.get(id) ?? id}`;
     onRemove(id);
     focusAfterRemoval([...chips.querySelectorAll('.chip__remove')], removedIndex, input);
   }
