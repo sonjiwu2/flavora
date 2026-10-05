@@ -159,7 +159,7 @@ legend {
   outline-offset: 3px;
 }
 
-:root [hidden] {
+[hidden]:not(#force-visible) {
   display: none;
 }
 
