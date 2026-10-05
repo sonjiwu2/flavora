@@ -85,6 +85,13 @@ export const ingredients = Object.freeze({
   cod: { name: 'Филе трески' },
   'pike-perch': { name: 'Судак' },
   shrimp: { name: 'Креветки' },
+  eggplant: { name: 'Баклажан' },
+  zucchini: { name: 'Кабачок' },
+  'dried-chickpeas': { name: 'Сухой нут' },
+  buckwheat: { name: 'Гречневая крупа' },
+  tahini: { name: 'Тахини' },
+  coriander: { name: 'Молотый кориандр' },
+  'provence-herbs': { name: 'Прованские травы' },
 });
 
 export function getIngredientName(ingredientId) {
