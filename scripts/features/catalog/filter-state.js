@@ -39,6 +39,11 @@ export function formatFoundCount(count) {
   return `Найдено ${count} ${pluralize(count, ['блюдо', 'блюда', 'блюд'])}`;
 }
 
+export function formatPreviewCount(count) {
+  if (count === 0) return 'По этим фильтрам ничего не найдётся';
+  return `Будет показано: ${count} ${pluralize(count, ['блюдо', 'блюда', 'блюд'])}`;
+}
+
 export function formatSavedCount(shown, total) {
   if (shown !== total) return `Найдено ${shown} из ${total}`;
   return `${total} ${pluralize(total, ['рецепт', 'рецепта', 'рецептов'])}`;
