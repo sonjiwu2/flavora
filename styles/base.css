@@ -111,6 +111,15 @@ textarea {
   letter-spacing: inherit;
 }
 
+a,
+button,
+input,
+select,
+label,
+summary {
+  touch-action: manipulation;
+}
+
 button,
 select,
 label[for],

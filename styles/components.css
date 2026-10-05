@@ -335,6 +335,10 @@
   }
 }
 
+.tabs__item:active {
+  color: var(--color-accent);
+}
+
 .tabs__item:disabled {
   color: var(--color-text-disabled);
 }
@@ -429,6 +433,13 @@
 .choice__input:focus-visible + .choice__label {
   outline: 2px solid var(--color-focus);
   outline-offset: 3px;
+}
+
+.tabs--boxed .tabs__item:not([aria-pressed='true']):active,
+.choice__input:not(:checked):active + .choice__label {
+  border-color: var(--color-ink);
+  background: var(--color-pressed);
+  color: var(--color-text);
 }
 
 .choice-group__hint {

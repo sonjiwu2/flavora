@@ -114,6 +114,15 @@
   }
 }
 
+.site-nav__link:active {
+  color: var(--color-accent);
+}
+
+.site-nav__link:not([aria-current='page']):active::after {
+  opacity: 0.75;
+  transform: none;
+}
+
 .site-header__tools {
   grid-area: tools;
   display: flex;
