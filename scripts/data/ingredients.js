@@ -98,6 +98,17 @@ export const ingredients = Object.freeze({
   suluguni: { name: 'Сулугуни' },
   apple: { name: 'Яблоки' },
   blueberries: { name: 'Черника' },
+  'heavy-cream': { name: 'Сливки 33%' },
+  mascarpone: { name: 'Маскарпоне' },
+  'cream-cheese': { name: 'Сливочный сыр' },
+  yogurt: { name: 'Натуральный йогурт' },
+  gelatin: { name: 'Желатин' },
+  'dark-chocolate': { name: 'Тёмный шоколад' },
+  cocoa: { name: 'Какао-порошок' },
+  coffee: { name: 'Кофе' },
+  savoiardi: { name: 'Печенье савоярди' },
+  'shortbread-cookies': { name: 'Песочное печенье' },
+  raisins: { name: 'Изюм' },
 });
 
 export function getIngredientName(ingredientId) {
