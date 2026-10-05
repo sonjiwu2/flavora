@@ -47,7 +47,7 @@ const TEXT = Object.freeze({
   resetAll: 'Сбросить всё',
   sort: 'Сортировка',
   sortDefault: 'По умолчанию',
-  sortByMatches: 'По числу совпадений',
+  sortByMatches: 'По совпадениям',
   emptyTitle: 'Ничего не нашлось',
   emptyText:
     'Попробуйте изменить запрос или убрать часть фильтров. Избранное и меню останутся как есть.',

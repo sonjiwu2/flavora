@@ -260,3 +260,13 @@ legend.filters-panel__legend {
     flex: 1 1 100%;
   }
 }
+
+@container recipe-list (width < 20rem) {
+  .catalog__quick > .button {
+    padding-inline: var(--space-2);
+  }
+
+  .catalog__toggle > .icon {
+    display: none;
+  }
+}
