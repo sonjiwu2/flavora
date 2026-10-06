@@ -1,6 +1,6 @@
 const DISH_WIDTHS = [480, 960];
 const DISH_ASPECT = 3 / 2;
-const STEP_SIZE = 512;
+export const STEP_SIZE = 400;
 
 function assetUrl(path) {
   return new URL(`../../assets/${path}`, import.meta.url).href;
