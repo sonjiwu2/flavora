@@ -27,6 +27,11 @@
 
 .recipe__main {
   display: grid;
+  grid-template-areas:
+    'header'
+    'photo'
+    'actions'
+    'ingredients';
   grid-template-columns: minmax(0, 1fr);
   align-content: start;
   gap: var(--space-5);
@@ -34,6 +39,7 @@
 
 .recipe__header {
   display: grid;
+  grid-area: header;
   gap: var(--space-2);
 }
 
@@ -68,6 +74,7 @@
 }
 
 .recipe__photo {
+  grid-area: photo;
   overflow: hidden;
   max-width: 40rem;
   aspect-ratio: 3 / 2;
@@ -87,6 +94,8 @@
 
 .recipe__actions {
   display: flex;
+  grid-area: actions;
+  align-self: start;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-3);
@@ -94,6 +103,8 @@
 
 .ingredients {
   display: grid;
+  grid-area: ingredients;
+  align-content: start;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--space-3);
 }
@@ -236,6 +247,7 @@
 
 .step__note {
   color: var(--color-text-muted);
+  text-wrap: balance;
   font-size: var(--text-small);
   line-height: var(--leading-heading);
   text-align: center;
@@ -269,10 +281,16 @@
 }
 
 .step-timer__display {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  display: flex;
+  flex-wrap: wrap;
   align-items: end;
-  gap: var(--space-1) var(--space-4);
+  justify-content: space-between;
+  gap: var(--space-3) var(--space-4);
+}
+
+.step-timer__readout {
+  display: grid;
+  gap: var(--space-1);
 }
 
 .step-timer__time {
@@ -283,7 +301,6 @@
 }
 
 .step-timer__state {
-  grid-column: 1;
   color: var(--color-text-muted);
   font-size: var(--text-small);
 }
@@ -295,8 +312,6 @@
 
 .step-timer__field {
   display: grid;
-  grid-column: 2;
-  grid-row: 1 / span 2;
   gap: var(--space-1);
   font-size: var(--text-small);
 }
@@ -342,6 +357,16 @@
     grid-row: 1;
     align-self: center;
     width: 100%;
+  }
+}
+
+@media (width >= 48rem) and (width < 64rem) {
+  .recipe__main {
+    grid-template:
+      'header header' auto
+      'photo ingredients' auto
+      'actions ingredients' 1fr / minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: var(--space-6);
   }
 }
 

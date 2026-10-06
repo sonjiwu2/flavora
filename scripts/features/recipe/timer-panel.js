@@ -101,8 +101,7 @@ export function createStepTimer(recipe, step, stepNumber) {
     el(
       'div',
       { class: 'step-timer__display' },
-      time,
-      state,
+      el('div', { class: 'step-timer__readout' }, time, state),
       el(
         'div',
         { class: 'field step-timer__field' },
