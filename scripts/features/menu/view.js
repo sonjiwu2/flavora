@@ -1,3 +1,4 @@
+import { closeAllDialogs } from '../../components/modal.js';
 import { setPageTitle, updateAddress } from '../../core/router.js';
 import { subscribe } from '../../core/store.js';
 import { isIsoDate, parseIsoDate, toIsoDate } from '../../utils/dates.js';
@@ -80,5 +81,6 @@ export function mount(outlet, route) {
     }),
   );
   disposer.add(listen(document, 'visibilitychange', refreshToday));
+  disposer.add(closeAllDialogs);
   return () => disposer.dispose();
 }

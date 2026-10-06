@@ -1,10 +1,10 @@
 import { icon } from '../../components/icons.js';
+import { openDialog } from '../../components/modal.js';
 import { getFavorites } from '../../core/store.js';
 import { CATEGORIES, getCategoryLabel } from '../../data/categories.js';
 import { getRecipe, recipes } from '../../data/recipes.js';
 import { el } from '../../utils/dom.js';
 import { pluralize } from '../../utils/format.js';
-import { openMenuDialog } from './dialog.js';
 import { createDishThumb, createDurationMeta } from './dish.js';
 import { filterRecipes, pickRecentFavorites } from './planner.js';
 
@@ -169,6 +169,6 @@ export function openRecipePicker({ title, context, currentRecipeId = null, onSel
     status,
     results,
   );
-  const dialog = openMenuDialog({ title, body, variant: 'side', onClose });
+  const dialog = openDialog({ title, body, variant: 'side', onClose });
   return dialog;
 }

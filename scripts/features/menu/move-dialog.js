@@ -1,8 +1,8 @@
+import { openDialog } from '../../components/modal.js';
+import { showToast } from '../../components/toast.js';
 import { getMeal, moveMeal } from '../../core/store.js';
 import { getRecipe } from '../../data/recipes.js';
 import { el } from '../../utils/dom.js';
-import { openMenuDialog } from './dialog.js';
-import { notify } from './notify.js';
 import { describeSlot, isSameSlot } from './planner.js';
 import { createSlotPicker } from './slot-picker.js';
 
@@ -22,8 +22,8 @@ function describeTarget(from, to) {
 }
 
 function announceMove(recipe, displaced, to) {
-  if (displaced) notify(`«${recipe.title}» и «${displaced.title}» поменялись местами`);
-  else notify(`«${recipe.title}» перенесено: ${describeSlot(to)}`);
+  if (displaced) showToast(`«${recipe.title}» и «${displaced.title}» поменялись местами`);
+  else showToast(`«${recipe.title}» перенесено: ${describeSlot(to)}`);
 }
 
 export function openMoveDialog({ from, weekStart, today, onMoved, onClose }) {
@@ -57,7 +57,7 @@ export function openMoveDialog({ from, weekStart, today, onMoved, onClose }) {
   }
 
   renderTarget(from);
-  const dialog = openMenuDialog({
+  const dialog = openDialog({
     title: 'Переместить блюдо',
     body: el(
       'div',

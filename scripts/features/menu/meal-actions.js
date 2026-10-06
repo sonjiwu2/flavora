@@ -1,7 +1,7 @@
+import { showToast } from '../../components/toast.js';
 import { clearMeal, getMeal, setMeal } from '../../core/store.js';
 import { getRecipe } from '../../data/recipes.js';
 import { openMoveDialog } from './move-dialog.js';
-import { notify } from './notify.js';
 import { describeSlot } from './planner.js';
 import { openRecipePicker } from './recipe-picker.js';
 
@@ -22,7 +22,9 @@ export function createMealActions({ getBoard, getWeekStart, getToday }) {
       currentRecipeId,
       onSelect(recipeId) {
         if (recipeId === currentRecipeId) return;
-        if (setMeal(slot.date, slot.meal, recipeId)) notify(describeChange(getRecipe(recipeId)));
+        if (setMeal(slot.date, slot.meal, recipeId)) {
+          showToast(describeChange(getRecipe(recipeId)));
+        }
       },
       onClose: () => focusSlot(slot),
     });
@@ -62,21 +64,28 @@ export function createMealActions({ getBoard, getWeekStart, getToday }) {
 
   function restore(slot, recipe) {
     if (getMeal(slot.date, slot.meal) !== null) {
-      notify(`Не удалось вернуть «${recipe.title}»: ячейка уже занята`);
+      showToast(`Не удалось вернуть «${recipe.title}»: ячейка уже занята`);
       return;
     }
     if (!setMeal(slot.date, slot.meal, recipe.id)) return;
     focusSlot(slot);
-    notify(`«${recipe.title}» снова в меню: ${describeSlot(slot)}`);
+    showToast(`«${recipe.title}» снова в меню: ${describeSlot(slot)}`);
   }
 
   function onRemove(slot) {
     const recipe = getRecipe(getMeal(slot.date, slot.meal));
     if (!recipe || !clearMeal(slot.date, slot.meal)) return;
     focusSlot(slot);
-    notify(`«${recipe.title}» убрано: ${describeSlot(slot)}`, {
-      label: 'Вернуть',
-      onSelect: () => restore(slot, recipe),
+    let isRestored = false;
+    showToast(`«${recipe.title}» убрано: ${describeSlot(slot)}`, {
+      action: {
+        label: 'Вернуть',
+        onSelect() {
+          if (isRestored) return;
+          isRestored = true;
+          restore(slot, recipe);
+        },
+      },
     });
   }
 

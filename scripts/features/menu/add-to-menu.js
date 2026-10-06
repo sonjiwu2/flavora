@@ -1,11 +1,11 @@
+import { openDialog } from '../../components/modal.js';
+import { showToast } from '../../components/toast.js';
 import { buildHref } from '../../core/router.js';
 import { getMeal, getMenu, setMeal } from '../../core/store.js';
 import { getRecipe } from '../../data/recipes.js';
 import { parseIsoDate, startOfWeek, toIsoDate } from '../../utils/dates.js';
 import { el } from '../../utils/dom.js';
-import { openMenuDialog } from './dialog.js';
 import { createDishThumb } from './dish.js';
-import { notify } from './notify.js';
 import { describeSlot, suggestMeal } from './planner.js';
 import { createSlotPicker } from './slot-picker.js';
 import { createWeekSwitcher } from './week-switcher.js';
@@ -56,15 +56,17 @@ export function openAddToMenu(recipeId) {
   function confirm() {
     const slot = picker.getSlot();
     if (!setMeal(slot.date, slot.meal, recipe.id)) return;
-    notify(`«${recipe.title}» добавлено: ${describeSlot(slot)}`, {
-      label: 'Открыть меню',
-      href: buildHref('/menu', { week: toIsoDate(startOfWeek(parseIsoDate(slot.date))) }),
+    showToast(`«${recipe.title}» добавлено: ${describeSlot(slot)}`, {
+      action: {
+        label: 'Открыть меню',
+        href: buildHref('/menu', { week: toIsoDate(startOfWeek(parseIsoDate(slot.date))) }),
+      },
     });
     dialog.close();
   }
 
   renderTarget(picker.getSlot());
-  const dialog = openMenuDialog({
+  const dialog = openDialog({
     title: 'В меню',
     body: el(
       'div',
