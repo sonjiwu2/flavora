@@ -13,9 +13,15 @@
 | `npm run lint`                            | ESLint и Stylelint                                                   |
 | `npm run format:check`                    | Проверка форматирования Prettier                                     |
 | `npm run test:unit`                       | Модульные тесты чистых функций (`node --test`)                       |
+| `npm run test:e2e`                        | Сценарии Playwright: Chromium, Firefox, WebKit и мобильный viewport  |
 
 Сервер намеренно отдаёт сайт только под префиксом `/flavora/`, чтобы ссылки от корня домена
 ломались локально так же, как на GitHub Pages.
+
+Сценарии e2e сами поднимают сервер на порту из переменной `E2E_PORT` (по умолчанию 5520), фиксируют
+«сегодня» и падают при любой ошибке Console, необработанном исключении и неудачном запросе.
+`tools/shot.mjs` дополнительно принимает `--clock`, `--timezone`, `--click`, `--fill`, `--press`,
+`--storage`, `--theme`, `--browser`, `--reduced-motion` и `--full`.
 
 ## Маршруты
 
@@ -32,6 +38,10 @@
 Ссылки строятся через `buildHref(path, query)` из `scripts/core/router.js`. Пути к файлам —
 только относительные (`styles/…`, `scripts/…`) или вычисленные от модуля
 (`new URL('…', import.meta.url)`); ссылок от корня домена (`/assets/…`) в проекте нет.
+
+`updateAddress(path, query, { replace })` меняет адрес без перемонтирования экрана — так меню
+переключает недели, сохраняя фокус. Оболочка хранит в `history.state` поле `flavoraEntry` для
+восстановления прокрутки по «назад»; код, который пишет в историю, обязан его сохранять.
 
 ## Жизненный цикл экрана
 
@@ -105,7 +115,7 @@
 | `flavora.menu.v1`      | `{ "YYYY-MM-DD": { "breakfast"?: id, "lunch"?: id, "dinner"?: id } }` |
 
 - Даты меню — локальные календарные даты `YYYY-MM-DD`; неделя начинается с понедельника.
-- В одной ячейке меню — один рецепт.
+- В одной ячейке меню — один рецепт. Несуществующие даты (`2026-02-30`) отбрасываются.
 - При чтении данные проверяются: повреждённый JSON, устаревшая схема и неизвестные ID отбрасываются.
 - Если запись в localStorage невозможна, значение живёт до конца сессии, а слушатели
   `onStorageFailure` из `scripts/core/storage.js` получают уведомление.
@@ -117,16 +127,22 @@ API: `subscribe(listener)` (слушатель получает `{ type }`, гд
 
 ## Общие модули
 
-| Модуль                                  | Назначение                                                      |
-| --------------------------------------- | --------------------------------------------------------------- |
-| `scripts/utils/dom.js`                  | `el()`, `listen()`, `createDisposer()`; текст только через узлы |
-| `scripts/utils/format.js`               | Русские множественные формы, длительность, порции, поиск        |
-| `scripts/components/icons.js`           | `icon(name, { size, filled })` — встроенные SVG                 |
-| `scripts/components/modal.js`           | `openDialog({ title, body, footer, variant, onClose })`         |
-| `scripts/components/toast.js`           | `showToast(message)` — короткое уведомление в live-region       |
-| `scripts/components/favorite-button.js` | `createFavoriteButton(recipe)` → `{ element, dispose }`         |
-| `scripts/components/recipe-card.js`     | `createRecipeCard(recipe, options)` → `{ element, dispose }`    |
-| `scripts/features/menu/add-to-menu.js`  | `openAddToMenu(recipeId)` — выбор даты и приёма пищи            |
+| Модуль                                  | Назначение                                                                   |
+| --------------------------------------- | ---------------------------------------------------------------------------- |
+| `scripts/utils/dom.js`                  | `el()`, `listen()`, `createDisposer()`; текст только через узлы              |
+| `scripts/utils/format.js`               | Русские множественные формы, длительность, порции, поиск                     |
+| `scripts/utils/dates.js`                | Локальные календарные даты, недели с понедельника, подписи                   |
+| `scripts/components/icons.js`           | `icon(name, { size, filled })` — встроенные SVG                              |
+| `scripts/components/modal.js`           | `openDialog({ title, body, footer, variant, onClose })`, `closeAllDialogs()` |
+| `scripts/components/toast.js`           | `showToast(message, { duration, action })` — уведомление в live-region       |
+| `scripts/components/favorite-button.js` | `createFavoriteButton(recipe)` → `{ element, dispose }`                      |
+| `scripts/components/recipe-card.js`     | `createRecipeCard(recipe, options)` → `{ element, dispose }`                 |
+| `scripts/features/menu/add-to-menu.js`  | `openAddToMenu(recipeId)` → `{ element, close }` или `null`                  |
+| `scripts/features/shell/*`              | Шапка, тема, движение, настройки, смена экрана, сбой сохранения              |
+
+`action` уведомления — `{ label, href }` (ссылка) или `{ label, onSelect }` (кнопка). Диалог
+`variant: 'side'` — панель справа на широком экране и нижний лист на телефоне; открытые диалоги
+закрываются при смене маршрута.
 
 ## Стили
 
@@ -134,8 +150,13 @@ API: `subscribe(listener)` (слушатель получает `{ type }`, гд
 тёмная тема переопределяет только значения в `:root[data-theme='dark']`. Остальные файлы используют
 токены и не содержат «магических» цветов. Классы — в стиле БЭМ: `block__element--modifier`.
 
+Движение управляется токенами `--duration-*`: они обнуляются при `data-motion="reduce"` на `<html>`
+и при системной настройке `prefers-reduced-motion` (кроме явного `data-motion="full"`), поэтому
+анимации на токенах отключаются без отдельных media-блоков.
+
 | Файл                    | Содержимое                                  |
 | ----------------------- | ------------------------------------------- |
+| `styles/fonts.css`      | Локальные Caveat и Marck Script, fallback   |
 | `styles/base.css`       | Сброс, базовая типографика, focus, иконки   |
 | `styles/layout.css`     | Контейнер, шапка, навигация                 |
 | `styles/components.css` | Кнопки, поля, диалоги, уведомления          |
