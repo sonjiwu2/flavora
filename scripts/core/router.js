@@ -35,6 +35,12 @@ export function navigate(path, query) {
   window.location.hash = buildHref(path, query);
 }
 
+export function updateAddress(path, query, { replace = false } = {}) {
+  const href = buildHref(path, query);
+  if (replace) window.history.replaceState(window.history.state, '', href);
+  else window.history.pushState(window.history.state, '', href);
+}
+
 export function setPageTitle(title) {
   document.title = title ? `${title} — Flavora` : 'Flavora — домашние рецепты';
 }
