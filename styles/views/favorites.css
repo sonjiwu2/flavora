@@ -1,4 +1,48 @@
 .favorites {
+  container: recipe-list / inline-size;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-5);
+}
+
+.favorites__header {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.favorites__controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+}
+
+.favorites__controls[hidden] {
+  display: none;
+}
+
+.favorites__search {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-4);
+}
+
+.favorites__search-field {
+  flex: 1 1 18rem;
+  min-width: 0;
+}
+
+.favorites__results {
+  min-width: 0;
+}
+
+.favorites__storage-note {
+  color: var(--color-text-muted);
+  font-size: var(--text-small);
+}
+
+@container recipe-list (width < 30rem) {
+  .favorites__sort {
+    flex: 1 1 100%;
+  }
 }
