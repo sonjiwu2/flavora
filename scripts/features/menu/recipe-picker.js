@@ -128,6 +128,7 @@ export function openRecipePicker({ title, context, currentRecipeId = null, onSel
   function renderResults() {
     const matches = filterRecipes(recipes, filters);
     status.textContent = isFiltered() ? describeCount(matches.length) : '';
+    status.classList.toggle('visually-hidden', matches.length === 0);
     if (matches.length === 0) results.replaceChildren(createEmptyState());
     else if (isFiltered()) results.replaceChildren(createList(matches, 'Найденные рецепты'));
     else results.replaceChildren(...createUnfilteredSections());
