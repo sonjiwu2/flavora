@@ -1,38 +1,123 @@
 import { createFavoriteButton } from '../../components/favorite-button.js';
+import { icon } from '../../components/icons.js';
 import { buildHref, setPageTitle } from '../../core/router.js';
-import { getIngredientName } from '../../data/ingredients.js';
+import { dishImage } from '../../data/media.js';
 import { getRecipe } from '../../data/recipes.js';
-import { el } from '../../utils/dom.js';
+import { createDisposer, el } from '../../utils/dom.js';
+import { formatDuration, formatServings } from '../../utils/format.js';
 import { openAddToMenu } from '../menu/add-to-menu.js';
 import { mount as mountNotFound } from '../shell/not-found.js';
+import { createIngredientsSection } from './ingredients-section.js';
+import { createStepsSection } from './steps-section.js';
+
+const DIFFICULTY_LABELS = { easy: 'Просто', medium: 'Средне', hard: 'Сложно' };
+const PHOTO_SIZES = '(min-width: 64rem) min(40vw, 34rem), calc(100vw - 2rem)';
+
+function createMetaItem(iconName, label, text) {
+  return el(
+    'li',
+    { class: 'meta__item recipe__meta-item' },
+    icon(iconName),
+    el('span', {}, el('span', { class: 'visually-hidden' }, `${label}: `), text),
+  );
+}
+
+function createHeader(recipe) {
+  const duration = formatDuration(recipe.totalMinutes, { long: true });
+  return el(
+    'header',
+    { class: 'recipe__header' },
+    el('h1', { class: 'page-title recipe__title' }, recipe.title),
+    el('p', { class: 'recipe__summary' }, recipe.summary),
+    el(
+      'ul',
+      { class: 'meta recipe__meta' },
+      createMetaItem('clock', 'Время', duration),
+      createMetaItem('user', 'Порции', formatServings(recipe.servings)),
+      createMetaItem('chef-hat', 'Сложность', DIFFICULTY_LABELS[recipe.difficulty]),
+    ),
+    recipe.activeMinutes &&
+      el(
+        'p',
+        { class: 'recipe__active-time' },
+        `Активной готовки — ${formatDuration(recipe.activeMinutes, { long: true })}`,
+      ),
+  );
+}
+
+function createPhoto(recipe) {
+  const source = dishImage(recipe.id);
+  const frame = el('div', { class: 'recipe__photo' });
+  const image = el('img', {
+    class: 'recipe__photo-image',
+    alt: `${recipe.title} — готовое блюдо`,
+    width: source.width,
+    height: source.height,
+    sizes: PHOTO_SIZES,
+    srcset: source.srcset,
+    fetchpriority: 'high',
+    decoding: 'async',
+    on: { error: () => frame.classList.add('recipe__photo--empty') },
+    src: source.src,
+  });
+  frame.append(image);
+  return frame;
+}
+
+function createActions(recipe, favorite) {
+  return el(
+    'div',
+    { class: 'recipe__actions' },
+    favorite.element,
+    el(
+      'button',
+      {
+        class: 'button button--secondary',
+        type: 'button',
+        on: { click: () => openAddToMenu(recipe.id) },
+      },
+      icon('calendar'),
+      'В меню',
+    ),
+  );
+}
 
 export function mount(outlet, route) {
   const recipe = getRecipe(route.params.id);
   if (!recipe) return mountNotFound(outlet, route);
 
   setPageTitle(recipe.title);
-  const favorite = createFavoriteButton(recipe);
+  const disposer = createDisposer();
+  const favorite = createFavoriteButton(recipe, { withLabel: true });
+  const ingredients = createIngredientsSection(recipe);
+  const steps = createStepsSection(recipe);
+  disposer.add(favorite.dispose);
+  disposer.add(steps.dispose);
+
   outlet.append(
-    el('a', { class: 'back-link', href: buildHref('/recipes') }, 'Все рецепты'),
-    el('h1', { class: 'page-title' }, recipe.title),
-    favorite.element,
     el(
-      'button',
-      { class: 'button', type: 'button', on: { click: () => openAddToMenu(recipe.id) } },
-      'В меню',
-    ),
-    el('h2', {}, 'Ингредиенты'),
-    el(
-      'ul',
-      {},
-      recipe.ingredients.map((ingredient) => el('li', {}, getIngredientName(ingredient.id))),
-    ),
-    el('h2', {}, 'Приготовление'),
-    el(
-      'ol',
-      {},
-      recipe.steps.map((step) => el('li', {}, step.title)),
+      'article',
+      { class: 'recipe' },
+      el(
+        'a',
+        { class: 'back-link', href: buildHref('/recipes') },
+        icon('arrow-left'),
+        'Все рецепты',
+      ),
+      el(
+        'div',
+        { class: 'recipe__layout' },
+        el(
+          'div',
+          { class: 'recipe__main' },
+          createHeader(recipe),
+          createPhoto(recipe),
+          createActions(recipe, favorite),
+          ingredients.element,
+        ),
+        steps.element,
+      ),
     ),
   );
-  return favorite.dispose;
+  return disposer.dispose;
 }
