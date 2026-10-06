@@ -106,8 +106,27 @@
   gap: var(--space-2) var(--space-4);
 }
 
-.ingredients__servings {
+.servings {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.servings__value {
+  margin-inline-end: var(--space-2);
   font-weight: 600;
+  white-space: nowrap;
+}
+
+.servings__button:disabled {
+  color: var(--color-border-strong);
+  cursor: not-allowed;
+}
+
+.servings__divider {
+  align-self: stretch;
+  margin-block: var(--space-2);
+  border-inline-start: 1px solid var(--color-border-strong);
 }
 
 .ingredients__list {
