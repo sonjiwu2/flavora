@@ -77,6 +77,7 @@ export function createSlotPicker({ weekStart, today, selected, onChange }) {
         name: dayGroupName,
         value: date,
         checked: date === state.date,
+        autofocus: date === selected.date && state.weekStart === weekStart,
         on: { change: () => selectDate(date) },
       }),
       el(
