@@ -89,6 +89,14 @@
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-3);
+  animation: recipe-rise var(--duration-panel) var(--ease-out) var(--duration-fast) backwards;
+}
+
+@keyframes recipe-rise {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem);
+  }
 }
 
 .recipe__action {
@@ -127,6 +135,7 @@
   align-content: start;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--space-3);
+  animation: recipe-rise var(--duration-panel) var(--ease-out) var(--duration-base) backwards;
 }
 
 .ingredients__header {
@@ -147,6 +156,19 @@
   margin-inline-end: var(--space-2);
   font-weight: 600;
   white-space: nowrap;
+  transform-origin: 0 50%;
+}
+
+.servings__value.is-ticking,
+.ingredients__amount.is-ticking {
+  animation: amount-tick var(--duration-base) var(--ease-out);
+}
+
+@keyframes amount-tick {
+  from {
+    opacity: 0.35;
+    transform: scale(1.12);
+  }
 }
 
 .servings__button:disabled {
@@ -190,10 +212,12 @@
   font-weight: 600;
   text-align: end;
   white-space: nowrap;
+  transform-origin: 100% 50%;
 }
 
 .recipe__steps {
   min-width: 0;
+  animation: recipe-rise var(--duration-panel) var(--ease-out) var(--duration-base) backwards;
 }
 
 .recipe__steps-header {
