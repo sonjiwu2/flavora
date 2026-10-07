@@ -288,29 +288,70 @@
 
 .step-timer {
   display: grid;
+  grid-column: 1 / -1;
   grid-template-columns: minmax(0, 1fr);
   justify-items: start;
-  gap: var(--space-3);
 }
 
 .step-timer__toggle {
+  max-width: 100%;
   margin-inline-start: calc(var(--space-3) * -1);
+  text-align: start;
 }
 
 .step-timer__badge {
   font-variant-numeric: tabular-nums;
 }
 
+.step-timer[data-status='done'] .step-timer__badge {
+  color: var(--color-success);
+}
+
+.step-timer__reveal {
+  display: grid;
+  grid-template-rows: 0fr;
+  width: 100%;
+  max-width: 24rem;
+  visibility: hidden;
+  transition:
+    grid-template-rows var(--duration-panel) var(--ease-out),
+    visibility 0s linear var(--duration-panel);
+}
+
+.step-timer[data-expanded='true'] .step-timer__reveal {
+  grid-template-rows: 1fr;
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+.step-timer__clip {
+  min-height: 0;
+  overflow: hidden;
+}
+
 .step-timer__panel {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--space-3);
-  width: 100%;
-  max-width: 24rem;
+  margin-block-start: var(--space-3);
   padding: var(--space-4);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-surface);
+  opacity: 0;
+  transform: translateY(-0.5rem);
+  transition:
+    opacity var(--duration-panel) var(--ease-out),
+    transform var(--duration-panel) var(--ease-out);
+}
+
+.step-timer[data-expanded='true'] .step-timer__panel {
+  opacity: 1;
+  transform: none;
+}
+
+.step-timer[data-status='done'] .step-timer__panel {
+  border-color: var(--color-success);
 }
 
 .step-timer__display {
@@ -331,6 +372,43 @@
   font-variant-numeric: tabular-nums;
   font-weight: 700;
   line-height: 1;
+  transform-origin: 0 50%;
+}
+
+.step-timer[data-status='done'] .step-timer__time {
+  animation: timer-done var(--duration-slow) var(--ease-out) 2;
+}
+
+@keyframes timer-done {
+  50% {
+    opacity: 0.6;
+    transform: scale(1.08);
+  }
+}
+
+.step-timer__progress {
+  overflow: hidden;
+  height: var(--space-1);
+  border-radius: var(--radius-pill);
+  background: var(--color-border);
+}
+
+.step-timer__progress-bar {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-accent);
+  transform: scaleX(var(--timer-progress, 0));
+  transform-origin: 0 50%;
+  transition: transform var(--duration-base) linear;
+}
+
+.step-timer[data-status='paused'] .step-timer__progress-bar {
+  opacity: 0.55;
+}
+
+.step-timer[data-status='done'] .step-timer__progress-bar {
+  background: var(--color-success);
 }
 
 .step-timer__state {

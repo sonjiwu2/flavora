@@ -53,9 +53,14 @@ function playSignal() {
   }
 }
 
+function describeFinished(timer) {
+  if (timer.stepLabel) return `Таймер шага ${timer.stepNumber} завершён: ${timer.stepLabel}`;
+  return `Таймер шага ${timer.stepNumber} «${timer.stepTitle}» завершён`;
+}
+
 function finish(timer) {
   timers.set(timer.key, completeTimer(timer));
-  showToast(`Таймер шага ${timer.stepNumber} «${timer.stepTitle}» завершён`);
+  showToast(describeFinished(timer));
   playSignal();
 }
 

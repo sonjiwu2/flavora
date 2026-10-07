@@ -24,6 +24,7 @@ const PRIMARY_LABELS = {
   [TIMER_STATUS.paused]: 'Продолжить',
   [TIMER_STATUS.done]: 'Старт',
 };
+const DONE_BADGE = 'готово';
 const STATE_LABELS = {
   [TIMER_STATUS.idle]: 'Таймер не запущен',
   [TIMER_STATUS.running]: 'Идёт отсчёт',
@@ -51,7 +52,13 @@ function createSoundSwitch() {
 
 export function createStepTimer(recipe, step, stepNumber) {
   const key = timerKey(recipe.id, stepNumber);
-  const descriptor = { key, recipeId: recipe.id, stepNumber, stepTitle: step.title };
+  const descriptor = {
+    key,
+    recipeId: recipe.id,
+    stepNumber,
+    stepTitle: step.title,
+    stepLabel: step.timerLabel ?? null,
+  };
   const panelId = `timer-panel-${stepNumber}`;
   const inputId = `timer-minutes-${stepNumber}`;
   const errorId = `timer-error-${stepNumber}`;
@@ -67,7 +74,7 @@ export function createStepTimer(recipe, step, stepNumber) {
       on: { click: toggleExpanded },
     },
     icon('clock'),
-    'Таймер',
+    step.timerLabel ? `Таймер: ${step.timerLabel}` : 'Таймер',
     badge,
   );
   const input = el('input', {
@@ -94,6 +101,8 @@ export function createStepTimer(recipe, step, stepNumber) {
     { class: 'button button--secondary button--small', type: 'button', on: { click: resetNow } },
     'Сброс',
   );
+  const progressBar = el('span', { class: 'step-timer__progress-bar' });
+  const progress = el('div', { class: 'step-timer__progress', 'aria-hidden': 'true' }, progressBar);
   const sound = isTimerSoundSupported() ? createSoundSwitch() : null;
   const panel = el(
     'div',
@@ -109,12 +118,18 @@ export function createStepTimer(recipe, step, stepNumber) {
         input,
       ),
     ),
+    progress,
     error,
     el('div', { class: 'step-timer__controls' }, primary, reset),
     sound?.element,
     announcer,
   );
-  const element = el('div', { class: 'step-timer' }, toggle, panel);
+  const element = el(
+    'div',
+    { class: 'step-timer' },
+    toggle,
+    el('div', { class: 'step-timer__reveal' }, el('div', { class: 'step-timer__clip' }, panel)),
+  );
 
   function currentStatus() {
     return getTimer(key)?.status ?? TIMER_STATUS.idle;
@@ -131,16 +146,28 @@ export function createStepTimer(recipe, step, stepNumber) {
       status === TIMER_STATUS.idle ? previewMs() : getTimerRemainingMs(key),
     );
     if (time.textContent !== clock) time.textContent = clock;
-    const badgeText = expanded || status === TIMER_STATUS.idle ? '' : clock;
+    const badgeText = collapsedBadge(status, clock);
     if (badge.textContent !== badgeText) badge.textContent = badgeText;
+    progressBar.style.setProperty('--timer-progress', elapsedShare(status));
+  }
+
+  function collapsedBadge(status, clock) {
+    if (expanded || status === TIMER_STATUS.idle) return '';
+    return status === TIMER_STATUS.done ? DONE_BADGE : clock;
+  }
+
+  function elapsedShare(status) {
+    const timer = getTimer(key);
+    if (!timer || status === TIMER_STATUS.idle) return '0';
+    return (1 - getTimerRemainingMs(key) / timer.durationMs).toFixed(4);
   }
 
   function render() {
     const status = currentStatus();
     const locked = status === TIMER_STATUS.running || status === TIMER_STATUS.paused;
     element.dataset.status = status;
+    element.dataset.expanded = String(expanded);
     toggle.setAttribute('aria-expanded', String(expanded));
-    panel.hidden = !expanded;
     input.disabled = locked;
     primary.textContent = PRIMARY_LABELS[status];
     reset.hidden = status === TIMER_STATUS.idle;
