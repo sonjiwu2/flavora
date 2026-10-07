@@ -13,9 +13,15 @@
 | `npm run lint`                            | ESLint и Stylelint                                                   |
 | `npm run format:check`                    | Проверка форматирования Prettier                                     |
 | `npm run test:unit`                       | Модульные тесты чистых функций (`node --test`)                       |
+| `npm run test:e2e`                        | Сценарии Playwright: Chromium, Firefox, WebKit и мобильный viewport  |
 
 Сервер намеренно отдаёт сайт только под префиксом `/flavora/`, чтобы ссылки от корня домена
 ломались локально так же, как на GitHub Pages.
+
+Сценарии e2e сами поднимают сервер на порту из переменной `E2E_PORT` (по умолчанию 5520), фиксируют
+«сегодня» и падают при любой ошибке Console, необработанном исключении и неудачном запросе.
+`tools/shot.mjs` дополнительно принимает `--clock`, `--timezone`, `--click`, `--fill`, `--press`,
+`--storage`, `--theme`, `--browser`, `--reduced-motion` и `--full`.
 
 ## Маршруты
 
@@ -23,7 +29,7 @@
 
 | Адрес                  | Экран                                    |
 | ---------------------- | ---------------------------------------- |
-| `#/recipes`            | Каталог (адрес по умолчанию)             |
+| `#/recipes`            | Каталог (адрес по умолчанию, см. ниже)   |
 | `#/recipe/<recipe-id>` | Страница рецепта                         |
 | `#/favorites`          | Избранное                                |
 | `#/menu`               | Меню на неделю (`?week=YYYY-MM-DD`)      |
@@ -32,6 +38,14 @@
 Ссылки строятся через `buildHref(path, query)` из `scripts/core/router.js`. Пути к файлам —
 только относительные (`styles/…`, `scripts/…`) или вычисленные от модуля
 (`new URL('…', import.meta.url)`); ссылок от корня домена (`/assets/…`) в проекте нет.
+
+Каталог хранит поиск и фильтры в query адреса: `q`, `category`, `time`, `have`, `only`, `without`,
+`sort`. Значения из адреса проверяются и имеют приоритет над состоянием, которое экран помнит в
+пределах сессии.
+
+`updateAddress(path, query, { replace })` меняет адрес без перемонтирования экрана — так меню
+переключает недели, сохраняя фокус. Оболочка хранит в `history.state` поле `flavoraEntry` для
+восстановления прокрутки по «назад»; код, который пишет в историю, обязан его сохранять.
 
 ## Жизненный цикл экрана
 
@@ -81,6 +95,10 @@
 помечает базовые продукты (соль, перец, вода, растительное масло), которые фильтр «Продукты дома»
 считает всегда доступными.
 
+Единицы и их русские формы описаны в `scripts/utils/quantities.js`; `taste` («по вкусу») и `serve`
+(«для подачи») идут с `amount: null`. `formatAmount` округляет до удобных значений, пишет дроби
+знаками ½ ¼ ¾ и ставит неразрывный пробел между числом и единицей.
+
 Категории (`scripts/data/categories.js`): `breakfast`, `soup`, `salad`, `pasta`, `meat`, `fish`,
 `vegetable`, `baking`, `dessert`.
 
@@ -91,7 +109,10 @@
 - `dishImage(id)` → `{ src, srcset, width, height }` для `assets/dishes/<id>-480.webp` и
   `assets/dishes/<id>-960.webp`, соотношение сторон 3:2;
 - `stepImage(id, n)` → `{ src, width, height }` для `assets/steps/<id>-step-0N.webp`: квадратный
-  WebP с прозрачным фоном, показывается с `object-fit: contain`.
+  WebP 400×400 (`STEP_SIZE`) с прозрачным фоном, показывается с `object-fit: contain`.
+
+Сцены нарезает `tools/slice-steps.mjs` из исходных листов 3×2 по связным областям альфа-канала:
+рисунки, выходящие за границу ячейки, не обрезаются, а фрагменты соседних сцен маскируются.
 
 ## Состояние
 
@@ -105,7 +126,7 @@
 | `flavora.menu.v1`      | `{ "YYYY-MM-DD": { "breakfast"?: id, "lunch"?: id, "dinner"?: id } }` |
 
 - Даты меню — локальные календарные даты `YYYY-MM-DD`; неделя начинается с понедельника.
-- В одной ячейке меню — один рецепт.
+- В одной ячейке меню — один рецепт. Несуществующие даты (`2026-02-30`) отбрасываются.
 - При чтении данные проверяются: повреждённый JSON, устаревшая схема и неизвестные ID отбрасываются.
 - Если запись в localStorage невозможна, значение живёт до конца сессии, а слушатели
   `onStorageFailure` из `scripts/core/storage.js` получают уведомление.
@@ -117,16 +138,23 @@ API: `subscribe(listener)` (слушатель получает `{ type }`, гд
 
 ## Общие модули
 
-| Модуль                                  | Назначение                                                      |
-| --------------------------------------- | --------------------------------------------------------------- |
-| `scripts/utils/dom.js`                  | `el()`, `listen()`, `createDisposer()`; текст только через узлы |
-| `scripts/utils/format.js`               | Русские множественные формы, длительность, порции, поиск        |
-| `scripts/components/icons.js`           | `icon(name, { size, filled })` — встроенные SVG                 |
-| `scripts/components/modal.js`           | `openDialog({ title, body, footer, variant, onClose })`         |
-| `scripts/components/toast.js`           | `showToast(message)` — короткое уведомление в live-region       |
-| `scripts/components/favorite-button.js` | `createFavoriteButton(recipe)` → `{ element, dispose }`         |
-| `scripts/components/recipe-card.js`     | `createRecipeCard(recipe, options)` → `{ element, dispose }`    |
-| `scripts/features/menu/add-to-menu.js`  | `openAddToMenu(recipeId)` — выбор даты и приёма пищи            |
+| Модуль                                  | Назначение                                                                       |
+| --------------------------------------- | -------------------------------------------------------------------------------- |
+| `scripts/utils/dom.js`                  | `el()`, `listen()`, `createDisposer()`; текст только через узлы                  |
+| `scripts/utils/format.js`               | Русские множественные формы, длительность, порции, поиск                         |
+| `scripts/utils/dates.js`                | Локальные календарные даты, недели с понедельника, подписи                       |
+| `scripts/components/icons.js`           | `icon(name, { size, filled })` — встроенные SVG                                  |
+| `scripts/components/modal.js`           | `openDialog({ title, body, footer, variant, onClose })`, `closeAllDialogs()`     |
+| `scripts/components/toast.js`           | `showToast(message, { duration, action })` — уведомление в live-region           |
+| `scripts/components/favorite-button.js` | `createFavoriteButton(recipe, { withLabel, announce })` → `{ element, dispose }` |
+| `scripts/components/recipe-card.js`     | `createRecipeCard(recipe, options)` → `{ element, dispose, setMatchLabel }`      |
+| `scripts/features/recipe/timers.js`     | Таймеры шагов: отсчёт по метке времени, один общий интервал                      |
+| `scripts/features/menu/add-to-menu.js`  | `openAddToMenu(recipeId)` → `{ element, close }` или `null`                      |
+| `scripts/features/shell/*`              | Шапка, тема, движение, настройки, смена экрана, сбой сохранения                  |
+
+`action` уведомления — `{ label, href }` (ссылка) или `{ label, onSelect }` (кнопка). Диалог
+`variant: 'side'` — панель справа на широком экране и нижний лист на телефоне; открытые диалоги
+закрываются при смене маршрута.
 
 ## Стили
 
@@ -134,8 +162,13 @@ API: `subscribe(listener)` (слушатель получает `{ type }`, гд
 тёмная тема переопределяет только значения в `:root[data-theme='dark']`. Остальные файлы используют
 токены и не содержат «магических» цветов. Классы — в стиле БЭМ: `block__element--modifier`.
 
+Движение управляется токенами `--duration-*`: они обнуляются при `data-motion="reduce"` на `<html>`
+и при системной настройке `prefers-reduced-motion` (кроме явного `data-motion="full"`), поэтому
+анимации на токенах отключаются без отдельных media-блоков.
+
 | Файл                    | Содержимое                                  |
 | ----------------------- | ------------------------------------------- |
+| `styles/fonts.css`      | Локальные Caveat и Marck Script, fallback   |
 | `styles/base.css`       | Сброс, базовая типографика, focus, иконки   |
 | `styles/layout.css`     | Контейнер, шапка, навигация                 |
 | `styles/components.css` | Кнопки, поля, диалоги, уведомления          |
