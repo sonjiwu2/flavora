@@ -173,6 +173,10 @@
   padding-inline-end: calc(100% - var(--category-tabs-width, 100%));
 }
 
+.category-tabs__item {
+  min-width: var(--touch-target);
+}
+
 .category-tabs::before,
 .category-tabs::after {
   content: '';
@@ -246,30 +250,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .recipe-card__image,
-  .recipe-card__link,
-  .favorite-button,
-  .favorite-button__icon,
-  .favorite-button__fill,
-  .category-tabs::before,
-  .category-tabs::after {
-    transition: none;
-  }
-
-  .recipe-card:hover .recipe-card__image,
-  .favorite-button:active .favorite-button__icon {
+  :root:not([data-motion='full']) .recipe-card:hover .recipe-card__image,
+  :root:not([data-motion='full']) .favorite-button:active .favorite-button__icon {
     transform: none;
   }
-}
-
-:root[data-motion='reduce'] .recipe-card__image,
-:root[data-motion='reduce'] .recipe-card__link,
-:root[data-motion='reduce'] .favorite-button,
-:root[data-motion='reduce'] .favorite-button__icon,
-:root[data-motion='reduce'] .favorite-button__fill,
-:root[data-motion='reduce'] .category-tabs::before,
-:root[data-motion='reduce'] .category-tabs::after {
-  transition: none;
 }
 
 :root[data-motion='reduce'] .recipe-card:hover .recipe-card__image,

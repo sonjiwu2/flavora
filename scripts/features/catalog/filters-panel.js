@@ -66,7 +66,7 @@ export function openFiltersPanel({ filters, onApply, onReset }) {
     el(
       'button',
       {
-        class: 'button button--secondary filters-panel__option',
+        class: 'tabs__item',
         type: 'button',
         on: { click: () => change({ ...draft, maxMinutes: limit }) },
       },
@@ -112,9 +112,9 @@ export function openFiltersPanel({ filters, onApply, onReset }) {
     'aria-describedby': onlyOwnedHint.id,
     on: { change: () => change({ ...draft, onlyOwned: onlyOwnedInput.checked }) },
   });
-  const onlyOwnedControl = el(
+  const onlyOwned = el(
     'div',
-    { class: 'filters-panel__switch-control' },
+    { class: 'filters-panel__switch' },
     el(
       'label',
       { class: 'switch' },
@@ -122,8 +122,8 @@ export function openFiltersPanel({ filters, onApply, onReset }) {
       el('span', { class: 'switch__track' }),
       el('span', { class: 'switch__label' }, TEXT.onlyOwned),
     ),
+    onlyOwnedHint,
   );
-  const onlyOwned = el('div', { class: 'filters-panel__switch' }, onlyOwnedControl, onlyOwnedHint);
 
   const preview = el('p', { class: 'filters-panel__preview', role: 'status' });
 
@@ -137,7 +137,6 @@ export function openFiltersPanel({ filters, onApply, onReset }) {
     const hasOwned = draft.owned.length > 0;
     onlyOwnedInput.disabled = !hasOwned;
     onlyOwnedInput.checked = draft.onlyOwned;
-    onlyOwnedControl.toggleAttribute('data-disabled', !hasOwned);
     onlyOwnedHint.textContent = hasOwned ? TEXT.onlyOwnedHint : TEXT.onlyOwnedDisabledHint;
     preview.textContent = formatPreviewCount(filterRecipes(recipes, draft).length);
   }
@@ -152,7 +151,7 @@ export function openFiltersPanel({ filters, onApply, onReset }) {
     { class: 'filters-panel' },
     createGroup(
       TEXT.time,
-      el('div', { class: 'filters-panel__options' }, timeButtons),
+      el('div', { class: 'tabs tabs--boxed' }, timeButtons),
       createHint(TEXT.timeHint),
     ),
     el(
