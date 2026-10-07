@@ -1,25 +1,38 @@
 import { stepImage } from '../../data/media.js';
 import { createDisposer, el } from '../../utils/dom.js';
 import { pluralize } from '../../utils/format.js';
+import { prefersReducedMotion } from '../shell/motion.js';
 import { describeServings } from './ingredients-section.js';
 import { createStepTimer } from './timer-panel.js';
 
 const STEP_FORMS = ['шаг', 'шага', 'шагов'];
+const AWAITING_CLASS = 'step--awaiting';
+const LOADING_CLASS = 'step__image--loading';
+const REVEAL_MARGIN = '0px 0px -8% 0px';
+
+function createImage(source) {
+  const image = el('img', {
+    class: 'step__image',
+    alt: '',
+    width: source.width,
+    height: source.height,
+    loading: 'lazy',
+    decoding: 'async',
+    src: source.src,
+  });
+  if (image.complete) return image;
+  const settle = () => image.classList.remove(LOADING_CLASS);
+  image.classList.add(LOADING_CLASS);
+  image.addEventListener('load', settle, { once: true });
+  image.addEventListener('error', settle, { once: true });
+  return image;
+}
 
 function createFigure(recipe, step, stepNumber) {
-  const source = stepImage(recipe.id, stepNumber);
   return el(
     'figure',
     { class: 'step__figure' },
-    el('img', {
-      class: 'step__image',
-      alt: '',
-      width: source.width,
-      height: source.height,
-      loading: 'lazy',
-      decoding: 'async',
-      src: source.src,
-    }),
+    createImage(stepImage(recipe.id, stepNumber)),
     step.note && el('figcaption', { class: 'step__note' }, step.note),
   );
 }
@@ -46,9 +59,34 @@ function createStep(recipe, step, stepNumber, disposer) {
   );
 }
 
+function revealOnScroll(steps) {
+  if (prefersReducedMotion() || typeof IntersectionObserver !== 'function') return () => {};
+  const observer = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        const { target } = entry;
+        const isBelowScreen = entry.boundingClientRect.top > (entry.rootBounds?.bottom ?? 0);
+        if (!entry.isIntersecting && isBelowScreen) {
+          target.classList.add(AWAITING_CLASS);
+          continue;
+        }
+        target.classList.remove(AWAITING_CLASS);
+        observer.unobserve(target);
+      }
+    },
+    { rootMargin: REVEAL_MARGIN },
+  );
+  for (const step of steps) observer.observe(step);
+  return () => {
+    observer.disconnect();
+    for (const step of steps) step.classList.remove(AWAITING_CLASS);
+  };
+}
+
 export function createStepsSection(recipe) {
   const disposer = createDisposer();
   const count = recipe.steps.length;
+  const steps = recipe.steps.map((step, index) => createStep(recipe, step, index + 1, disposer));
   const servingsNote = el(
     'p',
     { class: 'recipe__servings-note', hidden: true },
@@ -69,11 +107,8 @@ export function createStepsSection(recipe) {
       el('p', { class: 'recipe__steps-count' }, `${count} ${pluralize(count, STEP_FORMS)}`),
     ),
     servingsNote,
-    el(
-      'ol',
-      { class: 'steps' },
-      recipe.steps.map((step, index) => createStep(recipe, step, index + 1, disposer)),
-    ),
+    el('ol', { class: 'steps' }, steps),
   );
+  disposer.add(revealOnScroll(steps));
   return { element, setServings, dispose: disposer.dispose };
 }
