@@ -6,24 +6,33 @@ import { createFavoriteButton } from './favorite-button.js';
 import { icon } from './icons.js';
 
 const IMAGE_SIZES =
-  '(min-width: 86rem) 26rem, (min-width: 58rem) 30vw, (min-width: 38rem) 46vw, 92vw';
+  '(min-width: 86rem) 26rem, (min-width: 58rem) 30vw, (min-width: 40rem) 46vw, 92vw';
 const META_ICON_SIZE = 20;
 
+function markLoaded(image) {
+  image.dataset.loaded = '';
+}
+
 function createImage(recipe, { eager, priority }) {
-  const image = dishImage(recipe.id);
-  return el('img', {
+  const source = dishImage(recipe.id);
+  const image = el('img', {
     class: 'recipe-card__image',
     alt: '',
-    width: image.width,
-    height: image.height,
+    width: source.width,
+    height: source.height,
     loading: eager ? 'eager' : 'lazy',
     decoding: 'async',
     fetchpriority: priority ? 'high' : null,
     sizes: IMAGE_SIZES,
-    srcset: image.srcset,
-    src: image.src,
-    on: { error: (event) => event.currentTarget.remove() },
+    srcset: source.srcset,
+    src: source.src,
+    on: {
+      load: (event) => markLoaded(event.currentTarget),
+      error: (event) => event.currentTarget.remove(),
+    },
   });
+  if (priority || image.complete) markLoaded(image);
+  return image;
 }
 
 function createMetaItem(iconName, hiddenLabel, text) {
