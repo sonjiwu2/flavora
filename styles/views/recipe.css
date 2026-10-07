@@ -64,6 +64,7 @@
 }
 
 .recipe__photo {
+  position: relative;
   grid-area: photo;
   overflow: hidden;
   max-width: 40rem;
@@ -72,7 +73,21 @@
   background: var(--color-surface-muted);
 }
 
+.recipe__photo::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--color-surface-muted);
+  pointer-events: none;
+  transition: opacity var(--duration-panel) var(--ease-out);
+}
+
+.recipe__photo--loaded::after {
+  opacity: 0;
+}
+
 .recipe__photo-image {
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;

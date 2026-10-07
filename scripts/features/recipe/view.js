@@ -11,7 +11,10 @@ import { createIngredientsSection } from './ingredients-section.js';
 import { createStepsSection } from './steps-section.js';
 
 const DIFFICULTY_LABELS = { easy: 'Просто', medium: 'Средне', hard: 'Сложно' };
-const PHOTO_SIZES = '(min-width: 64rem) min(40vw, 34rem), calc(100vw - 2rem)';
+const PHOTO_SIZES =
+  '(min-width: 64rem) min(40vw, 35rem), (min-width: 48rem) 46vw, calc(100vw - 2rem)';
+const PHOTO_LOADED_CLASS = 'recipe__photo--loaded';
+const PHOTO_EMPTY_CLASS = 'recipe__photo--empty';
 
 function createMetaItem(iconName, label, text) {
   return el(
@@ -55,11 +58,16 @@ function createPhoto(recipe) {
     height: source.height,
     sizes: PHOTO_SIZES,
     srcset: source.srcset,
+    loading: 'eager',
     fetchpriority: 'high',
     decoding: 'async',
-    on: { error: () => frame.classList.add('recipe__photo--empty') },
+    on: {
+      load: () => frame.classList.add(PHOTO_LOADED_CLASS),
+      error: () => frame.classList.add(PHOTO_EMPTY_CLASS),
+    },
     src: source.src,
   });
+  if (image.complete && image.naturalWidth > 0) frame.classList.add(PHOTO_LOADED_CLASS);
   frame.append(image);
   return frame;
 }
