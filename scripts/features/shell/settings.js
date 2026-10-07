@@ -1,7 +1,8 @@
 import { openDialog } from '../../components/modal.js';
-import { getMotion, getTheme, setMotion, setTheme, subscribe } from '../../core/store.js';
+import { getMotion, getTheme, setMotion, subscribe } from '../../core/store.js';
 import { el } from '../../utils/dom.js';
 import { MOTION_OPTIONS, THEME_OPTIONS, fromChoice, toChoice } from './preferences.js';
+import { changeTheme } from './theme.js';
 
 let openSettingsDialog = null;
 
@@ -12,7 +13,9 @@ function createChoiceGroup({ name, legend, hint, options, read, write }) {
       type: 'radio',
       name,
       value: option.value,
-      on: { change: () => write(fromChoice(option.value)) },
+      on: {
+        change: (event) => write(fromChoice(option.value), event.target.closest('.choice')),
+      },
     }),
   );
 
@@ -50,7 +53,7 @@ export function openSettings() {
     legend: 'Тема',
     options: THEME_OPTIONS,
     read: getTheme,
-    write: setTheme,
+    write: changeTheme,
   });
   const motionGroup = createChoiceGroup({
     name: 'settings-motion',
@@ -58,7 +61,7 @@ export function openSettings() {
     hint: 'Уменьшенное движение убирает плавные появления и сдвиги.',
     options: MOTION_OPTIONS,
     read: getMotion,
-    write: setMotion,
+    write: (motion) => setMotion(motion),
   });
   const unsubscribe = subscribe((change) => {
     if (change.type === 'theme') themeGroup.sync();
