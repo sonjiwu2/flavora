@@ -6,6 +6,13 @@ export const TIME_LIMITS = Object.freeze([null, 15, 30, 60]);
 export const QUICK_TIME_LIMIT = 30;
 export const CATALOG_SORTS = Object.freeze(['default', 'title', 'fastest', 'slowest']);
 export const FAVORITE_SORTS = Object.freeze(['recent', 'title', 'fastest']);
+export const STAPLES_NAMED_IN_HINT = Object.freeze([
+  'salt',
+  'black-pepper',
+  'water',
+  'pasta-water',
+  'vegetable-oil',
+]);
 
 const LIST_SEPARATOR = ',';
 const DEFAULT_CONTEXT = Object.freeze({ ingredients, categories: CATEGORIES, getCategoryLabel });

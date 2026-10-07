@@ -9,7 +9,11 @@ const TEXT = Object.freeze({
   added: 'Добавлено: ',
   removed: 'Убрано: ',
   removeLabel: 'Убрать: ',
+  moreBefore: 'Ещё ',
+  moreAfter: ' — введите название, чтобы сузить список',
 });
+
+const MAX_VISIBLE_OPTIONS = 20;
 
 let fieldCount = 0;
 
@@ -51,6 +55,7 @@ export function createProductField({
     hidden: true,
   });
   const emptyNote = el('p', { class: 'product-field__empty', hidden: true });
+  const moreNote = el('p', { class: 'product-field__more', hidden: true });
   const combo = el(
     'div',
     { class: 'product-field__combo' },
@@ -62,6 +67,7 @@ export function createProductField({
       input,
     ),
     listbox,
+    moreNote,
     emptyNote,
   );
   const chips = el('ul', { class: 'product-field__chips', 'aria-label': chipsLabel, hidden: true });
@@ -90,6 +96,7 @@ export function createProductField({
   function close() {
     listbox.hidden = true;
     emptyNote.hidden = true;
+    moreNote.hidden = true;
     listbox.replaceChildren();
     suggestions = [];
     input.setAttribute('aria-expanded', 'false');
@@ -121,12 +128,16 @@ export function createProductField({
   }
 
   function open({ activate = 'first' } = {}) {
-    suggestions = suggestIngredients(options, input.value, selectedIds);
+    const matches = suggestIngredients(options, input.value, selectedIds);
+    const hiddenCount = Math.max(0, matches.length - MAX_VISIBLE_OPTIONS);
+    suggestions = matches.slice(0, MAX_VISIBLE_OPTIONS);
     const hasSuggestions = suggestions.length > 0;
     const emptyText = input.value.trim() === '' ? TEXT.allSelected : TEXT.noMatch;
     listbox.replaceChildren(...suggestions.map(createOption));
     listbox.hidden = !hasSuggestions;
     emptyNote.hidden = hasSuggestions;
+    moreNote.hidden = hiddenCount === 0;
+    moreNote.textContent = `${TEXT.moreBefore}${hiddenCount}${TEXT.moreAfter}`;
     emptyNote.textContent = hasSuggestions ? '' : emptyText;
     if (!hasSuggestions) status.textContent = emptyText;
     input.setAttribute('aria-expanded', String(hasSuggestions));

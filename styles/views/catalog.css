@@ -195,6 +195,13 @@ legend.filters-panel__legend {
   color: var(--color-text-muted);
 }
 
+.product-field__more {
+  padding-inline: var(--space-3);
+  color: var(--color-text-muted);
+  font-size: var(--text-small);
+  line-height: var(--leading-heading);
+}
+
 .product-field__chips {
   display: flex;
   flex-wrap: wrap;
