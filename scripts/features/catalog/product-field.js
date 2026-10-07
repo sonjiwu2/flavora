@@ -1,5 +1,6 @@
 import { icon } from '../../components/icons.js';
 import { el, listen } from '../../utils/dom.js';
+import { normalizeSearchText } from '../../utils/format.js';
 import { createChip, focusAfterRemoval } from './controls.js';
 import { suggestIngredients } from './filter-state.js';
 
@@ -9,6 +10,7 @@ const TEXT = Object.freeze({
   added: 'Добавлено: ',
   removed: 'Убрано: ',
   removeLabel: 'Убрать: ',
+  pending: 'Выберите продукт из списка или очистите поле — набранный текст пока не добавлен.',
   moreBefore: 'Ещё ',
   moreAfter: ' — введите название, чтобы сузить список',
 });
@@ -28,6 +30,7 @@ export function createProductField({
 }) {
   fieldCount += 1;
   const listId = `product-field-${fieldCount}-options`;
+  const pendingId = `product-field-${fieldCount}-pending`;
   const namesById = new Map(options.map((option) => [option.id, option.name]));
   let selectedIds = [...selected];
   let suggestions = [];
@@ -56,6 +59,11 @@ export function createProductField({
   });
   const emptyNote = el('p', { class: 'product-field__empty', hidden: true });
   const moreNote = el('p', { class: 'product-field__more', hidden: true });
+  const pendingNote = el(
+    'p',
+    { class: 'product-field__pending', id: pendingId, role: 'alert', hidden: true },
+    TEXT.pending,
+  );
   const combo = el(
     'div',
     { class: 'product-field__combo' },
@@ -69,6 +77,7 @@ export function createProductField({
     listbox,
     moreNote,
     emptyNote,
+    pendingNote,
   );
   const chips = el('ul', { class: 'product-field__chips', 'aria-label': chipsLabel, hidden: true });
   const status = el('p', { class: 'visually-hidden', role: 'status' });
@@ -103,7 +112,33 @@ export function createProductField({
     setActive(-1);
   }
 
+  function clearPending() {
+    pendingNote.hidden = true;
+    input.removeAttribute('aria-invalid');
+    input.removeAttribute('aria-describedby');
+  }
+
+  function showPending() {
+    pendingNote.hidden = false;
+    input.setAttribute('aria-invalid', 'true');
+    input.setAttribute('aria-describedby', pendingId);
+    input.focus();
+    open();
+  }
+
+  function settlePendingText() {
+    const typed = normalizeSearchText(input.value);
+    if (typed === '') return true;
+    const exact = suggestIngredients(options, typed, selectedIds).find(
+      (option) => normalizeSearchText(option.name) === typed,
+    );
+    if (exact) choose(exact);
+    else showPending();
+    return Boolean(exact);
+  }
+
   function choose(option) {
+    clearPending();
     input.value = '';
     close();
     status.textContent = `${TEXT.added}${option.name}`;
@@ -210,7 +245,10 @@ export function createProductField({
   }
 
   const stopListening = [
-    listen(input, 'input', () => open()),
+    listen(input, 'input', () => {
+      clearPending();
+      open();
+    }),
     listen(input, 'keydown', handleKeydown),
     listen(input, 'click', () => {
       if (!isOpen()) open({ activate: 'none' });
@@ -225,6 +263,7 @@ export function createProductField({
     isOpen,
     close,
     setSelected,
+    settlePendingText,
     dispose() {
       stopListening.forEach((stop) => stop());
     },

@@ -141,6 +141,13 @@ export function openFiltersPanel({ filters, onApply, onReset }) {
     preview.textContent = formatPreviewCount(filterRecipes(recipes, draft).length);
   }
 
+  function applyDraft() {
+    const fields = [ownedField, excludedField];
+    if (fields.some((field) => !field.settlePendingText())) return;
+    onApply(normalizeFilters(draft));
+    dialog.close();
+  }
+
   function change(nextDraft) {
     draft = nextDraft;
     render();
@@ -191,10 +198,7 @@ export function openFiltersPanel({ filters, onApply, onReset }) {
           class: 'button',
           type: 'button',
           on: {
-            click: () => {
-              onApply(normalizeFilters(draft));
-              dialog.close();
-            },
+            click: applyDraft,
           },
         },
         TEXT.apply,
