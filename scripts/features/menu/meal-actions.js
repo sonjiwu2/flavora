@@ -76,16 +76,8 @@ export function createMealActions({ getBoard, getWeekStart, getToday }) {
     const recipe = getRecipe(getMeal(slot.date, slot.meal));
     if (!recipe || !clearMeal(slot.date, slot.meal)) return;
     focusSlot(slot);
-    let isRestored = false;
     showToast(`«${recipe.title}» убрано: ${describeSlot(slot)}`, {
-      action: {
-        label: 'Вернуть',
-        onSelect() {
-          if (isRestored) return;
-          isRestored = true;
-          restore(slot, recipe);
-        },
-      },
+      action: { label: 'Вернуть', onSelect: () => restore(slot, recipe) },
     });
   }
 
