@@ -250,6 +250,28 @@
   }
 }
 
+@container recipe-list (width < 30rem) {
+  .sort-control {
+    flex: 1 1 auto;
+  }
+
+  .sort-control__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .sort-control__select {
+    flex: 1 1 auto;
+    width: auto;
+    padding-inline: var(--space-3) calc(var(--space-3) + 1.5rem);
+    background-position: right var(--space-2) center;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   :root:not([data-motion='full']) .recipe-card:hover .recipe-card__image,
   :root:not([data-motion='full']) .favorite-button:active .favorite-button__icon {

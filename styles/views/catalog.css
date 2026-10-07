@@ -235,6 +235,12 @@ legend.filters-panel__legend {
   }
 }
 
+@media (width < 40rem) {
+  .catalog {
+    gap: var(--space-4);
+  }
+}
+
 @container recipe-list (width < 40rem) {
   .catalog__quick {
     flex-wrap: wrap;
@@ -244,6 +250,27 @@ legend.filters-panel__legend {
   .catalog__quick > .button {
     flex: 1 1 auto;
     min-width: 0;
+  }
+
+  .catalog__status {
+    gap: var(--space-2) var(--space-4);
+  }
+
+  .catalog__chips {
+    flex-wrap: nowrap;
+    margin: calc(var(--space-2) * -1);
+    padding: var(--space-2);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+
+  .catalog__chips > * {
+    flex: none;
+  }
+
+  .catalog__chips > .chip {
+    max-width: none;
   }
 }
 
@@ -264,10 +291,6 @@ legend.filters-panel__legend {
 
   .catalog__quick > .button {
     padding-inline: var(--space-3);
-  }
-
-  .catalog__sort {
-    flex: 1 1 100%;
   }
 }
 

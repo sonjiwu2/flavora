@@ -76,14 +76,16 @@ export function mount(outlet) {
     selected: view.category,
     onSelect: (category) => apply({ ...view, category }),
   });
-  const count = el('p', { class: 'result-count', tabindex: '-1' });
+  const count = el('p', { class: 'result-count favorites__count', tabindex: '-1' });
   const announcer = createResultAnnouncer();
+  tabs.element.classList.add('favorites__tabs');
   const controls = el(
     'div',
     { class: 'favorites__controls' },
-    el('div', { class: 'favorites__search', role: 'search' }, search.element, sortControl.element),
+    el('div', { class: 'favorites__search', role: 'search' }, search.element),
     tabs.element,
     count,
+    sortControl.element,
   );
 
   const grid = el('div', { class: 'recipe-grid' });
