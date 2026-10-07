@@ -169,9 +169,8 @@
 
 .category-tabs__list {
   position: relative;
-  display: flex;
-  flex-wrap: wrap;
-  max-width: var(--category-tabs-width, none);
+  column-gap: var(--space-4);
+  padding-inline-end: calc(100% - var(--category-tabs-width, 100%));
 }
 
 .category-tabs::before,
@@ -234,7 +233,6 @@
 @container recipe-list (width < 40rem) {
   .category-tabs__list {
     flex-wrap: nowrap;
-    max-width: none;
     margin: calc(var(--space-2) * -1);
     padding: var(--space-2);
     overflow-x: auto;

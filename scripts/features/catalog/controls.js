@@ -1,13 +1,13 @@
 import { icon } from '../../components/icons.js';
 import { CATEGORIES } from '../../data/categories.js';
 import { el, listen } from '../../utils/dom.js';
-import { findBalancedRowWidth } from './wrap-balance.js';
+import { findTidyRowWidth } from './tab-rows.js';
 
 const ANNOUNCE_DELAY_MS = 600;
 const CHIP_ICON_SIZE = 16;
 const SCROLL_EDGE_TOLERANCE = 2;
 const COMPACT_VIEWPORT_QUERY = '(max-width: 26rem)';
-const BALANCED_WIDTH_PROPERTY = '--category-tabs-width';
+const TIDY_WIDTH_PROPERTY = '--category-tabs-width';
 
 export function syncChildren(container, nodes) {
   const wanted = new Set(nodes);
@@ -174,24 +174,22 @@ export function createCategoryTabs({ label, selected = null, onSelect }) {
     revealSelected();
   }
 
-  function balanceRows() {
+  function tidyRows() {
     const style = window.getComputedStyle(list);
-    const inlinePadding =
-      Number.parseFloat(style.paddingInlineStart) + Number.parseFloat(style.paddingInlineEnd);
-    const balancedWidth =
+    const tidyWidth =
       style.flexWrap === 'wrap'
-        ? findBalancedRowWidth(
+        ? findTidyRowWidth(
             buttons.map((button) => button.getBoundingClientRect().width),
             Number.parseFloat(style.columnGap) || 0,
-            element.clientWidth - inlinePadding,
+            element.clientWidth,
           )
         : null;
-    if (balancedWidth === null) element.style.removeProperty(BALANCED_WIDTH_PROPERTY);
-    else element.style.setProperty(BALANCED_WIDTH_PROPERTY, `${balancedWidth + inlinePadding}px`);
+    if (tidyWidth === null) element.style.removeProperty(TIDY_WIDTH_PROPERTY);
+    else element.style.setProperty(TIDY_WIDTH_PROPERTY, `${tidyWidth}px`);
   }
 
   function handleResize() {
-    balanceRows();
+    tidyRows();
     revealSelected();
   }
 
