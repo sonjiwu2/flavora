@@ -8,21 +8,43 @@
       content="Flavora — домашний кулинарный блокнот: 50 рецептов с пошаговыми иллюстрациями, избранное и меню на неделю."
     />
     <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#f8f5ef" />
     <title>Flavora — домашние рецепты</title>
     <script>
       (function () {
+        var root = document.documentElement;
         var theme = null;
+        var motion = null;
         try {
           theme = window.localStorage.getItem('flavora.theme.v1');
+          motion = window.localStorage.getItem('flavora.motion.v1');
         } catch (error) {
           theme = null;
+          motion = null;
         }
         if (theme !== 'light' && theme !== 'dark') {
           theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
         }
-        document.documentElement.dataset.theme = theme;
+        root.dataset.theme = theme;
+        if (motion === 'full' || motion === 'reduce') root.dataset.motion = motion;
       })();
     </script>
+    <link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml" />
+    <link
+      rel="preload"
+      href="assets/fonts/caveat-cyrillic-wght.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="assets/fonts/caveat-latin-wght.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link rel="stylesheet" href="styles/fonts.css" />
     <link rel="stylesheet" href="styles/tokens.css" />
     <link rel="stylesheet" href="styles/base.css" />
     <link rel="stylesheet" href="styles/layout.css" />
@@ -35,9 +57,9 @@
     <script type="module" src="scripts/app.js"></script>
   </head>
   <body>
-    <a class="skip-link" href="#app">Перейти к содержимому</a>
-    <header class="site-header">
-      <div class="site-header__inner container">
+    <a class="skip-link" href="#app" data-skip-link>Перейти к содержимому</a>
+    <header class="site-header container">
+      <div class="site-header__inner">
         <a class="site-logo" href="#/recipes" aria-label="Flavora — к рецептам">Flavora</a>
         <nav class="site-nav" aria-label="Основные разделы">
           <ul class="site-nav__list">
@@ -47,19 +69,68 @@
           </ul>
         </nav>
         <div class="site-header__tools">
-          <button class="icon-button" id="theme-toggle" type="button" aria-label="Переключить тему">
-            <span aria-hidden="true">☼</span>
+          <button
+            class="icon-button theme-toggle"
+            id="theme-toggle"
+            type="button"
+            aria-label="Переключить тему"
+          >
+            <svg
+              class="icon theme-toggle__icon--sun"
+              viewBox="0 0 24 24"
+              width="26"
+              height="26"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <path d="M12 8.25a3.75 3.75 0 1 0 0 7.5a3.75 3.75 0 0 0 0-7.5z" />
+              <path
+                d="M12 2.75v2M12 19.25v2M2.75 12h2M19.25 12h2M5.46 5.46l1.42 1.42M17.12 17.12l1.42 1.42M5.46 18.54l1.42-1.42M17.12 6.88l1.42-1.42"
+              />
+            </svg>
+            <svg
+              class="icon theme-toggle__icon--moon"
+              viewBox="0 0 24 24"
+              width="26"
+              height="26"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <path d="M20.2 14.1A8.4 8.4 0 0 1 9.9 3.8a8.45 8.45 0 1 0 10.3 10.3z" />
+            </svg>
+          </button>
+          <span class="site-header__divider" aria-hidden="true"></span>
+          <button
+            class="icon-button"
+            id="settings-open"
+            type="button"
+            aria-label="Настройки"
+            aria-haspopup="dialog"
+          >
+            <svg
+              class="icon"
+              viewBox="0 0 24 24"
+              width="26"
+              height="26"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <path
+                d="M10.4 5.08l.39-2.1h2.42l.39 2.1a7.1 7.1 0 0 1 2.16.9l1.76-1.21l1.71 1.71l-1.21 1.76a7.1 7.1 0 0 1 .9 2.16l2.1.39v2.42l-2.1.39a7.1 7.1 0 0 1-.9 2.16l1.21 1.76l-1.71 1.71l-1.76-1.21a7.1 7.1 0 0 1-2.16.9l-.39 2.1h-2.42l-.39-2.1a7.1 7.1 0 0 1-2.16-.9l-1.76 1.21l-1.71-1.71l1.21-1.76a7.1 7.1 0 0 1-.9-2.16l-2.1-.39v-2.42l2.1-.39a7.1 7.1 0 0 1 .9-2.16L4.77 6.48l1.71-1.71l1.76 1.21a7.1 7.1 0 0 1 2.16-.9z"
+              />
+              <path d="M12 9a3 3 0 1 0 0 6a3 3 0 0 0 0-6z" />
+            </svg>
           </button>
         </div>
       </div>
     </header>
     <main class="site-main container" id="app" tabindex="-1">
       <noscript>
-        <section class="noscript-note">
-          <h1>Flavora — домашний кулинарный блокнот</h1>
-          <p>
-            Каталог рецептов, избранное и меню на неделю работают на JavaScript. Включите его в
-            настройках браузера и обновите страницу, чтобы открыть рецепты.
+        <section class="notice-screen">
+          <h1 class="page-title">Flavora — домашний кулинарный блокнот</h1>
+          <p class="notice-screen__text">
+            Каталог из 50 рецептов, избранное и меню на неделю работают на JavaScript. Включите его
+            в настройках браузера и обновите страницу, чтобы открыть рецепты.
           </p>
         </section>
       </noscript>

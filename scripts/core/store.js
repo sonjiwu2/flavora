@@ -1,4 +1,5 @@
 import { hasRecipe } from '../data/recipes.js';
+import { isIsoDate } from '../utils/dates.js';
 import { readJson, readText, removeValue, writeJson, writeText } from './storage.js';
 
 export const STORAGE_KEYS = Object.freeze({
@@ -12,7 +13,6 @@ export const MEALS = Object.freeze(['breakfast', 'lunch', 'dinner']);
 export const THEMES = Object.freeze(['light', 'dark']);
 export const MOTION_MODES = Object.freeze(['full', 'reduce']);
 
-const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 const listeners = new Set();
 
 const state = {
@@ -43,7 +43,7 @@ export function sanitizeMenu(value) {
   const menu = {};
   if (value === null || typeof value !== 'object' || Array.isArray(value)) return menu;
   for (const [date, meals] of Object.entries(value)) {
-    if (!ISO_DATE.test(date) || meals === null || typeof meals !== 'object') continue;
+    if (!isIsoDate(date) || meals === null || typeof meals !== 'object') continue;
     const day = {};
     for (const meal of MEALS) {
       if (typeof meals[meal] === 'string' && hasRecipe(meals[meal])) day[meal] = meals[meal];
@@ -115,7 +115,7 @@ export function getMeal(date, meal) {
 }
 
 function isValidSlot(date, meal) {
-  return ISO_DATE.test(date) && MEALS.includes(meal);
+  return isIsoDate(date) && MEALS.includes(meal);
 }
 
 function writeSlot(menu, date, meal, recipeId) {
