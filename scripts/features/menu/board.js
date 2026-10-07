@@ -50,7 +50,7 @@ export function createBoard({ weekStart, today, selectedDay, handlers }) {
         'aria-label': `Добавить блюдо: ${describeSlot(slot)}`,
         on: { click: () => handlers.onAdd(slot) },
       },
-      el('span', { class: 'menu-add__icon' }, icon('plus')),
+      el('span', { class: 'icon-button icon-button--outlined menu-add__icon' }, icon('plus')),
       el('span', { class: 'menu-add__label' }, 'Добавить'),
     );
   }
@@ -69,12 +69,8 @@ export function createBoard({ weekStart, today, selectedDay, handlers }) {
       { class: 'menu-dish' },
       createDishThumbLink(recipe, 'menu-dish__thumb'),
       el('a', { class: 'menu-dish__title', href: buildHref(`/recipe/${recipe.id}`) }, recipe.title),
-      el(
-        'div',
-        { class: 'menu-dish__footer' },
-        createDurationMeta(recipe, 'menu-dish__meta'),
-        actions.element,
-      ),
+      createDurationMeta(recipe, 'menu-dish__meta'),
+      actions.element,
     );
   }
 
