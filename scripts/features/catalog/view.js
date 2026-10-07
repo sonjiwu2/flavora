@@ -1,6 +1,6 @@
 import { icon } from '../../components/icons.js';
 import { createRecipeCard } from '../../components/recipe-card.js';
-import { buildHref, setPageTitle } from '../../core/router.js';
+import { buildHref, setPageTitle, updateAddress } from '../../core/router.js';
 import { recipes } from '../../data/recipes.js';
 import { createDisposer, el, listen } from '../../utils/dom.js';
 import {
@@ -28,12 +28,10 @@ import {
   toggleQuickTime,
 } from './filter-state.js';
 import { openFiltersPanel } from './filters-panel.js';
-import { rememberScroll } from './scroll-memory.js';
 
 const ROUTE_PATH = '/recipes';
 const EAGER_CARD_COUNT = 3;
 const ADDRESS_DELAY_MS = 300;
-const SCROLL_STATE_KEY = 'catalogScroll';
 
 const TEXT = Object.freeze({
   title: 'Рецепты',
@@ -57,6 +55,14 @@ const TEXT = Object.freeze({
 });
 
 let savedFilters = createDefaultFilters();
+let leavingCatalog = false;
+
+function noteCatalogExit() {
+  leavingCatalog = true;
+  queueMicrotask(() => {
+    leavingCatalog = false;
+  });
+}
 
 function sortOptions(filters) {
   return [
@@ -71,14 +77,15 @@ function sortOptions(filters) {
 }
 
 function readInitialFilters(route) {
-  return Object.keys(route.query ?? {}).length > 0 ? parseFilters(route.query) : savedFilters;
+  if (Object.keys(route.query ?? {}).length > 0) return parseFilters(route.query);
+  return leavingCatalog ? resetFilters(savedFilters) : savedFilters;
 }
 
 export function mount(outlet, route) {
   const disposer = createDisposer();
   const cards = new Map();
   const coarsePointer = window.matchMedia('(pointer: coarse)');
-  const scrollMemory = rememberScroll(SCROLL_STATE_KEY);
+  const reopenedFromCatalog = leavingCatalog;
   let filters = readInitialFilters(route);
   let panel = null;
   let addressTimer = null;
@@ -174,11 +181,12 @@ export function mount(outlet, route) {
 
   function writeAddress() {
     cancelAddressTimer();
-    const href = buildHref(ROUTE_PATH, serializeFilters(filters));
+    const query = serializeFilters(filters);
+    const href = buildHref(ROUTE_PATH, query);
     const currentHash = window.location.hash;
     if (currentHash === href) return;
     if (!href.includes('?') && !currentHash.includes('?')) return;
-    window.history.replaceState(window.history.state, '', href);
+    updateAddress(ROUTE_PATH, query, { replace: true });
   }
 
   function scheduleAddress() {
@@ -277,8 +285,7 @@ export function mount(outlet, route) {
     if (coarsePointer.matches) search.input.blur();
   }
 
-  disposer.add(scrollMemory.dispose);
-  disposer.add(listen(grid, 'click', scrollMemory.save, { capture: true }));
+  disposer.add(noteCatalogExit);
   disposer.add(search.dispose);
   disposer.add(tabs.dispose);
   disposer.add(announcer.dispose);
@@ -313,6 +320,6 @@ export function mount(outlet, route) {
   savedFilters = filters;
   render();
   writeAddress();
-  scrollMemory.restore();
+  if (reopenedFromCatalog) window.scrollTo(0, 0);
   return disposer.dispose;
 }
