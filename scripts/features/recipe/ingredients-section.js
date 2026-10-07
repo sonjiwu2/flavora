@@ -8,8 +8,8 @@ const MIN_SERVINGS = 1;
 const DEFAULT_MAX_SERVINGS = 12;
 const SERVING_FORMS = ['порцию', 'порции', 'порций'];
 
-function servingsLabel(servings) {
-  return `На ${servings} ${pluralize(servings, SERVING_FORMS)}`;
+export function describeServings(servings) {
+  return `${servings} ${pluralize(servings, SERVING_FORMS)}`;
 }
 
 function createIngredientRow(ingredient) {
@@ -42,7 +42,7 @@ function createStepperButton(iconName, label, onClick) {
   );
 }
 
-export function createIngredientsSection(recipe) {
+export function createIngredientsSection(recipe, { onServingsChange } = {}) {
   const maxServings = Math.max(DEFAULT_MAX_SERVINGS, recipe.servings * 2);
   const rows = recipe.ingredients.map(createIngredientRow);
   const value = el('p', {
@@ -55,7 +55,7 @@ export function createIngredientsSection(recipe) {
   let servings = recipe.servings;
 
   function render() {
-    value.textContent = servingsLabel(servings);
+    value.textContent = `На ${describeServings(servings)}`;
     decrease.disabled = servings <= MIN_SERVINGS;
     increase.disabled = servings >= maxServings;
     for (const row of rows) {
@@ -66,6 +66,7 @@ export function createIngredientsSection(recipe) {
   function change(delta) {
     servings = Math.min(maxServings, Math.max(MIN_SERVINGS, servings + delta));
     render();
+    onServingsChange?.(servings);
     if (decrease.disabled) increase.focus();
     if (increase.disabled) decrease.focus();
   }

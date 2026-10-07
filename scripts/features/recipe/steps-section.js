@@ -1,6 +1,7 @@
 import { stepImage } from '../../data/media.js';
 import { createDisposer, el } from '../../utils/dom.js';
 import { pluralize } from '../../utils/format.js';
+import { describeServings } from './ingredients-section.js';
 import { createStepTimer } from './timer-panel.js';
 
 const STEP_FORMS = ['шаг', 'шага', 'шагов'];
@@ -48,6 +49,16 @@ function createStep(recipe, step, stepNumber, disposer) {
 export function createStepsSection(recipe) {
   const disposer = createDisposer();
   const count = recipe.steps.length;
+  const servingsNote = el(
+    'p',
+    { class: 'recipe__servings-note', hidden: true },
+    `Количества в шагах указаны на ${describeServings(recipe.servings)} — сверяйтесь со списком ингредиентов.`,
+  );
+
+  function setServings(servings) {
+    servingsNote.hidden = servings === recipe.servings;
+  }
+
   const element = el(
     'section',
     { class: 'recipe__steps', 'aria-labelledby': 'steps-title' },
@@ -57,11 +68,12 @@ export function createStepsSection(recipe) {
       el('h2', { class: 'section-title', id: 'steps-title' }, 'Приготовление'),
       el('p', { class: 'recipe__steps-count' }, `${count} ${pluralize(count, STEP_FORMS)}`),
     ),
+    servingsNote,
     el(
       'ol',
       { class: 'steps' },
       recipe.steps.map((step, index) => createStep(recipe, step, index + 1, disposer)),
     ),
   );
-  return { element, dispose: disposer.dispose };
+  return { element, setServings, dispose: disposer.dispose };
 }

@@ -16,7 +16,7 @@ const PHOTO_SIZES = '(min-width: 64rem) min(40vw, 34rem), calc(100vw - 2rem)';
 function createMetaItem(iconName, label, text) {
   return el(
     'li',
-    { class: 'meta__item recipe__meta-item' },
+    { class: 'meta__item' },
     icon(iconName),
     el('span', {}, el('span', { class: 'visually-hidden' }, `${label}: `), text),
   );
@@ -31,7 +31,7 @@ function createHeader(recipe) {
     el('p', { class: 'recipe__summary' }, recipe.summary),
     el(
       'ul',
-      { class: 'meta recipe__meta' },
+      { class: 'meta meta--large recipe__meta' },
       createMetaItem('clock', 'Время', duration),
       createMetaItem('user', 'Порции', formatServings(recipe.servings)),
       createMetaItem('chef-hat', 'Сложность', DIFFICULTY_LABELS[recipe.difficulty]),
@@ -72,7 +72,7 @@ function createActions(recipe, favorite) {
     el(
       'button',
       {
-        class: 'button button--secondary',
+        class: 'button button--secondary recipe__action',
         type: 'button',
         on: { click: () => openAddToMenu(recipe.id) },
       },
@@ -89,8 +89,9 @@ export function mount(outlet, route) {
   setPageTitle(recipe.title);
   const disposer = createDisposer();
   const favorite = createFavoriteButton(recipe, { withLabel: true });
-  const ingredients = createIngredientsSection(recipe);
+  favorite.element.classList.add('recipe__action');
   const steps = createStepsSection(recipe);
+  const ingredients = createIngredientsSection(recipe, { onServingsChange: steps.setServings });
   disposer.add(favorite.dispose);
   disposer.add(steps.dispose);
 
