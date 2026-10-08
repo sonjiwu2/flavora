@@ -50,6 +50,12 @@
   font-weight: 400;
   line-height: var(--leading-tight);
   text-decoration: none;
+  transition: transform var(--duration-base) var(--ease-spring);
+}
+
+.site-logo:active {
+  transform: scale(var(--press-scale));
+  transition: transform var(--duration-fast) var(--ease-out);
 }
 
 .site-nav {
@@ -76,6 +82,7 @@
   font-weight: 600;
   text-decoration: none;
   white-space: nowrap;
+  transition: transform var(--duration-base) var(--ease-spring);
 }
 
 .site-nav__link::after {
@@ -116,6 +123,8 @@
 
 .site-nav__link:active {
   color: var(--color-accent);
+  transform: scale(var(--press-scale-small));
+  transition: transform var(--duration-fast) var(--ease-out);
 }
 
 .site-nav__link:not([aria-current='page']):active::after {

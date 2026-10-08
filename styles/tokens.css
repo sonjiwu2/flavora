@@ -10,6 +10,7 @@
   --color-on-accent: #fffaf3;
   --color-ink: #2f2825;
   --color-ink-hover: #4a3f3a;
+  --color-ink-pressed: #1b1512;
   --color-on-ink: #fffaf3;
   --color-border: #e2dacf;
   --color-border-strong: #8d8176;
@@ -71,6 +72,8 @@
   --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
   --ease-in-out: cubic-bezier(0.5, 0, 0.2, 1);
   --ease-spring: cubic-bezier(0.34, 1.45, 0.64, 1);
+  --press-scale: 0.97;
+  --press-scale-small: 0.92;
 
   --stroke-hand-line: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 8' preserveAspectRatio='none'%3E%3Cpath d='M1.5 4.9C19 2.7 41 5.4 63 3.9c20-1.3 38-1.9 55.5-.4c-18-.2-36 .9-55 2.4C42 7.6 20 5.2 1.5 4.9z'/%3E%3C/svg%3E");
   --icon-chevron-down: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23241c18' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5.5 9.5L12 16l6.5-6.5'/%3E%3C/svg%3E");
@@ -88,6 +91,7 @@
   --color-on-accent: #2a1218;
   --color-ink: #e6dccf;
   --color-ink-hover: #f7efe2;
+  --color-ink-pressed: #cfc3b3;
   --color-on-ink: #241c18;
   --color-border: #463c36;
   --color-border-strong: #85796e;
