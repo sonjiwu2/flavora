@@ -4,7 +4,12 @@ import { buildHref, setPageTitle } from '../../core/router.js';
 import { dishImage } from '../../data/media.js';
 import { getRecipe } from '../../data/recipes.js';
 import { createDisposer, el } from '../../utils/dom.js';
-import { formatDuration, formatServings, keepShortWordsAttached } from '../../utils/format.js';
+import {
+  formatDuration,
+  formatServings,
+  keepShortWordsAttached,
+  typeset,
+} from '../../utils/format.js';
 import { openAddToMenu } from '../menu/add-to-menu.js';
 import { mount as mountNotFound } from '../shell/not-found.js';
 import { createIngredientsSection } from './ingredients-section.js';
@@ -26,12 +31,12 @@ function createMetaItem(iconName, label, text) {
 }
 
 function createHeader(recipe) {
-  const duration = formatDuration(recipe.totalMinutes, { long: true });
+  const duration = typeset(formatDuration(recipe.totalMinutes, { long: true }));
   return el(
     'header',
     { class: 'recipe__header' },
     el('h1', { class: 'page-title recipe__title' }, keepShortWordsAttached(recipe.title)),
-    el('p', { class: 'recipe__summary' }, recipe.summary),
+    el('p', { class: 'recipe__summary' }, typeset(recipe.summary)),
     el(
       'ul',
       { class: 'meta meta--large recipe__meta' },
@@ -43,7 +48,7 @@ function createHeader(recipe) {
       el(
         'p',
         { class: 'recipe__active-time' },
-        `Активной готовки — ${formatDuration(recipe.activeMinutes, { long: true })}`,
+        typeset(`Активной готовки — ${formatDuration(recipe.activeMinutes, { long: true })}`),
       ),
   );
 }

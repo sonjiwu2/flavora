@@ -224,6 +224,7 @@
 
 .ingredients__amount {
   flex: none;
+  padding-inline-end: var(--space-1);
   font-weight: 600;
   text-align: end;
   white-space: nowrap;
@@ -246,6 +247,7 @@
 }
 
 .recipe__steps-count {
+  padding-inline-end: var(--space-1);
   color: var(--color-text-muted);
   font-weight: 600;
 }

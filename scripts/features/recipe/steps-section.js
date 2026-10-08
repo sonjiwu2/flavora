@@ -1,6 +1,6 @@
 import { stepImage } from '../../data/media.js';
 import { createDisposer, el } from '../../utils/dom.js';
-import { keepNumbersWithUnits, keepShortWordsAttached, pluralize } from '../../utils/format.js';
+import { keepShortWordsAttached, pluralize, typeset } from '../../utils/format.js';
 import { prefersReducedMotion } from '../shell/motion.js';
 import { describeServings } from './ingredients-section.js';
 import { createStepTimer } from './timer-panel.js';
@@ -33,7 +33,7 @@ function createFigure(recipe, step, stepNumber) {
     'figure',
     { class: 'step__figure' },
     createImage(stepImage(recipe.id, stepNumber)),
-    step.note && el('figcaption', { class: 'step__note' }, keepNumbersWithUnits(step.note)),
+    step.note && el('figcaption', { class: 'step__note' }, typeset(step.note)),
   );
 }
 
@@ -52,7 +52,7 @@ function createStep(recipe, step, stepNumber, disposer) {
       'div',
       { class: 'step__body' },
       el('h3', { class: 'step__title' }, keepShortWordsAttached(step.title)),
-      el('p', { class: 'step__text' }, keepNumbersWithUnits(step.text)),
+      el('p', { class: 'step__text' }, typeset(step.text)),
       timer?.element,
     ),
     createFigure(recipe, step, stepNumber),
@@ -90,7 +90,7 @@ export function createStepsSection(recipe) {
   const servingsNote = el(
     'p',
     { class: 'recipe__servings-note', hidden: true },
-    keepNumbersWithUnits(
+    typeset(
       `Количества в шагах указаны на ${describeServings(recipe.servings)} — сверяйтесь со списком ингредиентов.`,
     ),
   );
