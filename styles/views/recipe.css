@@ -43,11 +43,6 @@
   gap: var(--space-2);
 }
 
-.recipe__title {
-  overflow-wrap: break-word;
-  text-wrap: balance;
-}
-
 .recipe__summary {
   color: var(--color-text-muted);
   font-size: var(--text-heading);
@@ -70,7 +65,6 @@
   max-width: 40rem;
   aspect-ratio: 3 / 2;
   border-radius: var(--radius-lg);
-  background: var(--color-surface-muted);
 }
 
 .recipe__photo::after {
@@ -226,7 +220,6 @@
   flex: none;
   padding-inline-end: var(--space-1);
   font-weight: 600;
-  text-align: end;
   white-space: nowrap;
   transform-origin: 100% 50%;
 }
@@ -310,7 +303,6 @@
 
 .step__text {
   grid-column: 1 / -1;
-  overflow-wrap: break-word;
 }
 
 .step__figure {
@@ -477,7 +469,6 @@
 }
 
 .step-timer__field {
-  display: grid;
   gap: var(--space-1);
   font-size: var(--text-small);
 }

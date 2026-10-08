@@ -50,7 +50,7 @@ function createStepperButton(iconName, label, onClick) {
   );
 }
 
-export function createIngredientsSection(recipe, { onServingsChange } = {}) {
+export function createIngredientsSection(recipe, { onServingsChange }) {
   const maxServings = Math.max(DEFAULT_MAX_SERVINGS, recipe.servings * 2);
   const rows = recipe.ingredients.map(createIngredientRow);
   const value = el('p', {
@@ -79,7 +79,7 @@ export function createIngredientsSection(recipe, { onServingsChange } = {}) {
   function change(delta) {
     servings = Math.min(maxServings, Math.max(MIN_SERVINGS, servings + delta));
     replayTick([value, ...render()]);
-    onServingsChange?.(servings);
+    onServingsChange(servings);
     if (decrease.disabled) increase.focus();
     if (increase.disabled) decrease.focus();
   }

@@ -1,7 +1,13 @@
 import { icon } from '../../components/icons.js';
 import { el } from '../../utils/dom.js';
 import { pluralize } from '../../utils/format.js';
-import { TIMER_STATUS, describeRemaining, formatClock, parseTimerMinutes } from './timer-state.js';
+import {
+  MS_IN_MINUTE,
+  TIMER_STATUS,
+  describeRemaining,
+  formatClock,
+  parseTimerMinutes,
+} from './timer-state.js';
 import {
   getTimer,
   getTimerRemainingMs,
@@ -16,7 +22,6 @@ import {
   timerKey,
 } from './timers.js';
 
-const MS_IN_MINUTE = 60_000;
 const MINUTE_FORMS = ['минуту', 'минуты', 'минут'];
 const PRIMARY_LABELS = {
   [TIMER_STATUS.idle]: 'Старт',
@@ -42,7 +47,7 @@ function createSoundSwitch() {
   });
   const element = el(
     'label',
-    { class: 'switch step-timer__sound' },
+    { class: 'switch' },
     input,
     el('span', { class: 'switch__track', 'aria-hidden': 'true' }),
     el('span', { class: 'switch__label' }, 'Звуковой сигнал'),

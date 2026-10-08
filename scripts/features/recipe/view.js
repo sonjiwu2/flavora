@@ -35,7 +35,7 @@ function createHeader(recipe) {
   return el(
     'header',
     { class: 'recipe__header' },
-    el('h1', { class: 'page-title recipe__title' }, keepShortWordsAttached(recipe.title)),
+    el('h1', { class: 'page-title' }, keepShortWordsAttached(recipe.title)),
     el('p', { class: 'recipe__summary' }, typeset(recipe.summary)),
     el(
       'ul',
@@ -63,7 +63,6 @@ function createPhoto(recipe) {
     height: source.height,
     sizes: PHOTO_SIZES,
     srcset: source.srcset,
-    loading: 'eager',
     fetchpriority: 'high',
     decoding: 'async',
     on: {

@@ -1,9 +1,9 @@
 const MS_IN_SECOND = 1000;
 const SECONDS_IN_MINUTE = 60;
 const MINUTES_IN_HOUR = 60;
-const MS_IN_MINUTE = MS_IN_SECOND * SECONDS_IN_MINUTE;
+const MIN_TIMER_MINUTES = 1;
 
-export const MIN_TIMER_MINUTES = 1;
+export const MS_IN_MINUTE = MS_IN_SECOND * SECONDS_IN_MINUTE;
 export const MAX_TIMER_MINUTES = 600;
 export const TIMER_STATUS = Object.freeze({
   idle: 'idle',
