@@ -42,8 +42,8 @@ export function createScreenChangeHandler(outlet) {
     currentEntryId = knownEntryId ?? createEntryId();
     if (isSameScreen) return;
 
-    restartEnterAnimation(outlet);
     if (isFirstScreen) return;
+    restartEnterAnimation(outlet);
     closeAllDialogs();
     window.scrollTo(0, knownEntryId === null ? 0 : (scrollPositions.get(knownEntryId) ?? 0));
     outlet.focus({ preventScroll: true });
