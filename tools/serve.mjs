@@ -1,7 +1,7 @@
 import { createServer } from 'node:http';
 import { createReadStream } from 'node:fs';
-import { stat } from 'node:fs/promises';
-import { extname, join, normalize, resolve, sep } from 'node:path';
+import { realpath, stat } from 'node:fs/promises';
+import { extname, join, normalize, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const BASE_PATH = '/flavora/';
@@ -20,7 +20,18 @@ const MIME_TYPES = {
   '.md': 'text/markdown; charset=utf-8',
 };
 
-export function startServer({ port = 5510, root = process.cwd() } = {}) {
+function isPublicFile(filePath) {
+  const path = filePath.split(sep).join('/');
+  if (path.split('/').some((part) => part.startsWith('.'))) return false;
+  return (
+    path === 'index.html' ||
+    /^scripts\/.+\.js$/.test(path) ||
+    /^styles\/.+\.css$/.test(path) ||
+    /^assets\/.+\.(svg|webp|png|jpg|woff2)$/.test(path)
+  );
+}
+
+export function startServer({ port = 5510, root = process.cwd(), host = '127.0.0.1' } = {}) {
   const rootDir = resolve(root);
 
   const server = createServer(async (request, response) => {
@@ -47,6 +58,18 @@ export function startServer({ port = 5510, root = process.cwd() } = {}) {
     try {
       const info = await stat(filePath);
       const target = info.isDirectory() ? join(filePath, 'index.html') : filePath;
+      const [canonicalRoot, canonicalTarget] = await Promise.all([
+        realpath(rootDir),
+        realpath(target),
+      ]);
+      if (
+        !isPublicFile(relative(rootDir, target)) ||
+        !isPublicFile(relative(canonicalRoot, canonicalTarget))
+      ) {
+        response.writeHead(404);
+        response.end();
+        return;
+      }
       const type = MIME_TYPES[extname(target).toLowerCase()] ?? 'application/octet-stream';
       response.writeHead(200, { 'Content-Type': type, 'Cache-Control': 'no-store' });
       createReadStream(target).pipe(response);
@@ -57,7 +80,7 @@ export function startServer({ port = 5510, root = process.cwd() } = {}) {
   });
 
   return new Promise((resolveServer) => {
-    server.listen(port, '127.0.0.1', () => resolveServer(server));
+    server.listen(port, host, () => resolveServer(server));
   });
 }
 
@@ -68,6 +91,7 @@ function readOption(name, fallback) {
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const port = Number(readOption('port', process.env.PORT ?? 5510));
-  await startServer({ port, root: readOption('root', process.cwd()) });
-  process.stdout.write(`Flavora: http://127.0.0.1:${port}${BASE_PATH}\n`);
+  const host = readOption('host', '127.0.0.1');
+  await startServer({ port, host, root: readOption('root', process.cwd()) });
+  process.stdout.write(`Flavora: http://${host}:${port}${BASE_PATH}\n`);
 }
