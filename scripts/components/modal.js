@@ -2,7 +2,7 @@ import { el } from '../utils/dom.js';
 import { icon } from './icons.js';
 import { moveToastRegion, removeAfterExit } from './toast.js';
 
-const VARIANTS = ['center', 'side'];
+const VARIANTS = ['center', 'side', 'sheet'];
 const TRIGGER_SELECTOR = 'button, a[href], input, select, textarea, summary, [tabindex]';
 const TRIGGER_MEMORY_MS = 1000;
 const openDialogs = [];

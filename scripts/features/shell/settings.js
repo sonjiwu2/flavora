@@ -70,6 +70,7 @@ export function openSettings() {
   openSettingsDialog = openDialog({
     title: 'Настройки',
     body: el('div', { class: 'settings' }, themeGroup.element, motionGroup.element),
+    variant: 'sheet',
     onClose: () => {
       unsubscribe();
       openSettingsDialog = null;

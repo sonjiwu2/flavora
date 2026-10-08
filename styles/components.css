@@ -453,6 +453,16 @@
   display: grid;
 }
 
+@media (width < 30rem) {
+  .choice-group__options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .choice:first-child:nth-last-child(odd) {
+    grid-column: 1 / -1;
+  }
+}
+
 .choice__input {
   position: absolute;
   inset: 0;
@@ -720,9 +730,10 @@
 }
 
 @media (width < 40rem) {
-  .dialog--side {
+  .dialog--side,
+  .dialog--sheet {
     width: 100%;
-    height: auto;
+    height: fit-content;
     max-height: min(88dvh, 100dvh - var(--space-7));
     margin: auto 0 0;
     padding-inline: env(safe-area-inset-left) env(safe-area-inset-right);
@@ -730,16 +741,26 @@
     border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   }
 
-  .dialog--side[open] {
+  .dialog--side[open],
+  .dialog--sheet[open] {
     animation-name: dialog-enter-sheet;
   }
 
-  .dialog--side:not([open]) {
+  .dialog--side:not([open]),
+  .dialog--sheet:not([open]) {
     animation-name: dialog-exit-sheet;
   }
 
   .dialog--side .dialog__header {
     padding-block-start: var(--space-4);
+  }
+
+  .dialog--sheet .dialog__body:not(:has(~ .dialog__footer)) {
+    padding-block-end: max(var(--space-5), env(safe-area-inset-bottom));
+  }
+
+  .dialog--sheet .dialog__footer {
+    padding-block-end: max(var(--space-4), env(safe-area-inset-bottom));
   }
 }
 
