@@ -30,7 +30,7 @@ function createImage(source) {
 
 function createFigure(recipe, step, stepNumber) {
   return el(
-    'figure',
+    step.note ? 'figure' : 'div',
     { class: 'step__figure' },
     createImage(stepImage(recipe.id, stepNumber)),
     step.note && el('figcaption', { class: 'step__note' }, typeset(step.note)),
@@ -109,7 +109,7 @@ export function createStepsSection(recipe) {
       el('p', { class: 'recipe__steps-count' }, `${count} ${pluralize(count, STEP_FORMS)}`),
     ),
     servingsNote,
-    el('ol', { class: 'steps' }, steps),
+    el('ol', { class: 'steps', role: 'list' }, steps),
   );
   disposer.add(revealOnScroll(steps));
   return { element, setServings, dispose: disposer.dispose };

@@ -60,6 +60,9 @@ export function createStepTimer(recipe, step, stepNumber) {
     stepLabel: step.timerLabel ?? null,
   };
   const panelId = `timer-panel-${stepNumber}`;
+  const panelLabel = step.timerLabel
+    ? `Таймер шага ${stepNumber}: ${step.timerLabel}`
+    : `Таймер шага ${stepNumber}`;
   const inputId = `timer-minutes-${stepNumber}`;
   const errorId = `timer-error-${stepNumber}`;
   let expanded = getTimer(key) !== null;
@@ -85,7 +88,7 @@ export function createStepTimer(recipe, step, stepNumber) {
     autocomplete: 'off',
     'aria-describedby': errorId,
     value: String(getTimer(key)?.minutes ?? step.timerMinutes),
-    on: { input: clearError },
+    on: { input: clearError, keydown: startOnEnter },
   });
   const error = el('p', { class: 'step-timer__error', id: errorId, role: 'alert', hidden: true });
   const time = el('p', { class: 'step-timer__time', role: 'timer', 'aria-live': 'off' });
@@ -106,7 +109,7 @@ export function createStepTimer(recipe, step, stepNumber) {
   const sound = isTimerSoundSupported() ? createSoundSwitch() : null;
   const panel = el(
     'div',
-    { class: 'step-timer__panel', id: panelId },
+    { class: 'step-timer__panel', id: panelId, role: 'group', 'aria-label': panelLabel },
     el(
       'div',
       { class: 'step-timer__display' },
@@ -205,6 +208,13 @@ export function createStepTimer(recipe, step, stepNumber) {
     input.value = String(minutes);
     startTimer(descriptor, minutes);
     announcer.textContent = `Таймер запущен на ${minutes} ${pluralize(minutes, MINUTE_FORMS)}`;
+  }
+
+  function startOnEnter(event) {
+    if (event.key !== 'Enter') return;
+    event.preventDefault();
+    startNow();
+    if (currentStatus() === TIMER_STATUS.running) primary.focus();
   }
 
   function runPrimaryAction() {

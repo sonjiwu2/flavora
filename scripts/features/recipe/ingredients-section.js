@@ -103,7 +103,7 @@ export function createIngredientsSection(recipe, { onServingsChange } = {}) {
     ),
     el(
       'ul',
-      { class: 'ingredients__list' },
+      { class: 'ingredients__list', role: 'list' },
       rows.map((row) => row.element),
     ),
   );

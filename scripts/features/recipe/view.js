@@ -39,7 +39,7 @@ function createHeader(recipe) {
     el('p', { class: 'recipe__summary' }, typeset(recipe.summary)),
     el(
       'ul',
-      { class: 'meta meta--large recipe__meta' },
+      { class: 'meta meta--large recipe__meta', role: 'list' },
       createMetaItem('clock', 'Время', duration),
       createMetaItem('user', 'Порции', formatServings(recipe.servings)),
       createMetaItem('chef-hat', 'Сложность', DIFFICULTY_LABELS[recipe.difficulty]),
