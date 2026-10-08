@@ -273,7 +273,7 @@ legend.filters-panel__legend {
   }
 }
 
-@container recipe-list (width < 56rem) {
+@container recipe-list (width < 79rem) {
   .catalog__toolbar {
     grid-template-columns: minmax(0, 1fr);
   }
