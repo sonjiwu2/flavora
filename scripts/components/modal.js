@@ -57,6 +57,22 @@ function restoreFocus(opener) {
   if (opener instanceof HTMLElement && opener.isConnected && hasLostFocus()) opener.focus();
 }
 
+function releaseFocus(dialog) {
+  const focused = document.activeElement;
+  if (focused instanceof HTMLElement && dialog.contains(focused)) focused.blur();
+}
+
+function leave(dialog) {
+  if (openDialogs.length > 0) {
+    dialog.remove();
+    return;
+  }
+  dialog.inert = true;
+  dialog.setAttribute('aria-hidden', 'true');
+  const exitAnimations = dialog.getAnimations().map((animation) => animation.finished);
+  Promise.allSettled(exitAnimations).then(() => dialog.remove());
+}
+
 function forget(dialog) {
   const index = openDialogs.indexOf(dialog);
   if (index !== -1) openDialogs.splice(index, 1);
@@ -105,7 +121,8 @@ export function openDialog({ title, body, footer = null, variant = 'center', onC
   dialog.addEventListener('close', () => {
     forget(dialog);
     moveToastRegion(openDialogs.at(-1) ?? document.body);
-    dialog.remove();
+    releaseFocus(dialog);
+    leave(dialog);
     if (openDialogs.length === 0) unlockPageScroll();
     restoreFocus(opener);
     onClose?.();
