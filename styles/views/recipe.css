@@ -511,6 +511,20 @@
   gap: var(--space-2);
 }
 
+@media (width < 30rem) {
+  .recipe__action {
+    flex: 1 1 auto;
+    padding-inline: var(--space-4);
+  }
+}
+
+@media print {
+  .step--awaiting {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 @container (width >= 34rem) {
   .step {
     grid-template-columns: auto minmax(0, 1fr) 11rem;

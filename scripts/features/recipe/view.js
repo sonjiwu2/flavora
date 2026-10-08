@@ -4,7 +4,7 @@ import { buildHref, setPageTitle } from '../../core/router.js';
 import { dishImage } from '../../data/media.js';
 import { getRecipe } from '../../data/recipes.js';
 import { createDisposer, el } from '../../utils/dom.js';
-import { formatDuration, formatServings } from '../../utils/format.js';
+import { formatDuration, formatServings, keepShortWordsAttached } from '../../utils/format.js';
 import { openAddToMenu } from '../menu/add-to-menu.js';
 import { mount as mountNotFound } from '../shell/not-found.js';
 import { createIngredientsSection } from './ingredients-section.js';
@@ -30,7 +30,7 @@ function createHeader(recipe) {
   return el(
     'header',
     { class: 'recipe__header' },
-    el('h1', { class: 'page-title recipe__title' }, recipe.title),
+    el('h1', { class: 'page-title recipe__title' }, keepShortWordsAttached(recipe.title)),
     el('p', { class: 'recipe__summary' }, recipe.summary),
     el(
       'ul',
