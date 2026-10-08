@@ -3,7 +3,6 @@ import { ingredients } from '../../data/ingredients.js';
 import { normalizeSearchText, pluralize } from '../../utils/format.js';
 
 export const TIME_LIMITS = Object.freeze([null, 15, 30, 60]);
-export const QUICK_TIME_LIMIT = 30;
 export const CATALOG_SORTS = Object.freeze(['default', 'title', 'fastest', 'slowest']);
 export const FAVORITE_SORTS = Object.freeze(['recent', 'title', 'fastest']);
 export const STAPLES_NAMED_IN_HINT = Object.freeze([
@@ -118,11 +117,6 @@ export function removeOwned(filters, ingredientId) {
 
 export function removeExcluded(filters, ingredientId) {
   return { ...filters, excluded: filters.excluded.filter((id) => id !== ingredientId) };
-}
-
-export function toggleQuickTime(filters) {
-  const maxMinutes = filters.maxMinutes === QUICK_TIME_LIMIT ? null : QUICK_TIME_LIMIT;
-  return { ...filters, maxMinutes };
 }
 
 export function serializeFilters(filters) {

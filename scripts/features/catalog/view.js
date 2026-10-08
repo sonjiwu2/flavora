@@ -14,18 +14,15 @@ import {
 } from './controls.js';
 import { selectRecipes } from './filter-recipes.js';
 import {
-  QUICK_TIME_LIMIT,
   countPanelFilters,
   createDefaultFilters,
   describeActiveFilters,
   formatFoundCount,
   formatPantryMatch,
-  formatTimeLimit,
   normalizeFilters,
   parseFilters,
   resetFilters,
   serializeFilters,
-  toggleQuickTime,
 } from './filter-state.js';
 import { openFiltersPanel } from './filters-panel.js';
 import { captureLayout, refreshSoftly, settleFromLayout } from './motion.js';
@@ -118,16 +115,6 @@ export function mount(outlet, route) {
     selected: filters.category,
     onSelect: (category) => apply({ ...filters, category }),
   });
-  const quickTime = el(
-    'button',
-    {
-      class: 'button button--secondary catalog__toggle',
-      type: 'button',
-      on: { click: () => apply(toggleQuickTime(filters)) },
-    },
-    icon('clock'),
-    formatTimeLimit(QUICK_TIME_LIMIT),
-  );
   const filtersCount = el('span', { class: 'catalog__filters-count', hidden: true });
   const filtersButton = el(
     'button',
@@ -251,7 +238,6 @@ export function mount(outlet, route) {
     const entries = selectRecipes(recipes, filters);
     if (search.input.value !== filters.query) search.input.value = filters.query;
     tabs.setSelected(filters.category);
-    quickTime.setAttribute('aria-pressed', String(filters.maxMinutes === QUICK_TIME_LIMIT));
     renderFiltersCount();
     sortControl.update(sortOptions(filters), filters.sort);
     count.textContent = formatFoundCount(entries.length);
@@ -320,7 +306,7 @@ export function mount(outlet, route) {
         'div',
         { class: 'catalog__toolbar' },
         tabs.element,
-        el('div', { class: 'catalog__quick' }, quickTime, filtersButton),
+        el('div', { class: 'catalog__quick' }, filtersButton),
       ),
       el('div', { class: 'catalog__status' }, count, sortControl.element, chipList),
       announcer.element,

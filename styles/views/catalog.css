@@ -32,12 +32,6 @@
   justify-self: end;
 }
 
-.catalog__toggle[aria-pressed='true'] {
-  border-color: var(--color-ink);
-  background: var(--color-ink);
-  color: var(--color-on-ink);
-}
-
 .catalog__filters-button {
   position: relative;
 }
@@ -342,20 +336,9 @@ legend.filters-panel__legend {
   .catalog__quick > .button {
     padding-inline: var(--space-2);
   }
-
-  .catalog__toggle > .icon {
-    display: none;
-  }
 }
 
 @media (forced-colors: active) {
-  .catalog__toggle[aria-pressed='true'] {
-    border-color: Highlight;
-    background: Highlight;
-    color: HighlightText;
-    forced-color-adjust: none;
-  }
-
   .product-field__option[aria-selected='true'] {
     outline: 2px solid Highlight;
     outline-offset: -2px;
