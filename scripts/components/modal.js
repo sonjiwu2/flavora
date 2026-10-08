@@ -1,6 +1,6 @@
 import { el } from '../utils/dom.js';
 import { icon } from './icons.js';
-import { moveToastRegion } from './toast.js';
+import { moveToastRegion, removeAfterExit } from './toast.js';
 
 const VARIANTS = ['center', 'side'];
 const TRIGGER_SELECTOR = 'button, a[href], input, select, textarea, summary, [tabindex]';
@@ -63,14 +63,8 @@ function releaseFocus(dialog) {
 }
 
 function leave(dialog) {
-  if (openDialogs.length > 0) {
-    dialog.remove();
-    return;
-  }
-  dialog.inert = true;
-  dialog.setAttribute('aria-hidden', 'true');
-  const exitAnimations = dialog.getAnimations().map((animation) => animation.finished);
-  Promise.allSettled(exitAnimations).then(() => dialog.remove());
+  if (openDialogs.length > 0) dialog.remove();
+  else removeAfterExit(dialog);
 }
 
 function forget(dialog) {
