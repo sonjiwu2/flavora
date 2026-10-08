@@ -551,6 +551,7 @@
 
   .menu-dish {
     position: relative;
+    align-content: start;
     grid-template:
       'thumb' auto
       'title' auto
@@ -689,6 +690,11 @@
 .slot-dialog {
   display: grid;
   gap: var(--space-4);
+  container: slot-dialog / inline-size;
+}
+
+.slot-dialog__summary {
+  color: var(--color-text-muted);
 }
 
 .slot-dialog__recipe {
@@ -708,7 +714,6 @@
 .slot-picker {
   display: grid;
   gap: var(--space-4);
-  container: slot-picker / inline-size;
 }
 
 .slot-picker__days {
@@ -717,7 +722,7 @@
   gap: var(--space-1);
 }
 
-@container slot-picker (width >= 20.75rem) {
+@container slot-dialog (width >= 20.75rem) {
   .slot-picker__days {
     grid-template-columns: repeat(7, minmax(0, 1fr));
   }
@@ -808,7 +813,13 @@
 }
 
 .slot-status {
-  min-height: 2lh;
+  min-height: 3lh;
+}
+
+@container slot-dialog (width >= 20.75rem) {
+  .slot-status {
+    min-height: 2lh;
+  }
 }
 
 .menu,

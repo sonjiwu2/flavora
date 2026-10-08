@@ -1,11 +1,9 @@
-import { openDialog } from '../../components/modal.js';
 import { showToast } from '../../components/toast.js';
 import { getMeal, moveMeal } from '../../core/store.js';
 import { getRecipe } from '../../data/recipes.js';
 import { el } from '../../utils/dom.js';
-import { playEnter } from './motion.js';
 import { describeSlot, isSameSlot } from './planner.js';
-import { createSlotPicker } from './slot-picker.js';
+import { openSlotDialog } from './slot-dialog.js';
 
 function describeTarget(from, to) {
   if (isSameSlot(from, to)) {
@@ -31,48 +29,20 @@ export function openMoveDialog({ from, weekStart, today, onMoved, onClose }) {
   const recipe = getRecipe(getMeal(from.date, from.meal));
   if (!recipe) return null;
 
-  const status = el('p', { class: 'slot-status', role: 'status' });
-  const confirmButton = el('button', { class: 'button', type: 'button' });
-  const cancelButton = el(
-    'button',
-    { class: 'button button--secondary', type: 'button' },
-    'Отмена',
-  );
-
-  function renderTarget(to) {
-    const target = describeTarget(from, to);
-    if (status.textContent !== target.text) playEnter(status, 'fade');
-    status.textContent = target.text;
-    confirmButton.textContent = target.action;
-    confirmButton.disabled = !target.allowed;
-  }
-
-  const picker = createSlotPicker({ weekStart, today, selected: from, onChange: renderTarget });
-
-  function confirm() {
-    const to = picker.getSlot();
-    const displaced = getRecipe(getMeal(to.date, to.meal));
-    if (!moveMeal(from, to)) return;
-    announceMove(recipe, displaced, to);
-    onMoved(to);
-    dialog.close();
-  }
-
-  renderTarget(from);
-  const dialog = openDialog({
+  return openSlotDialog({
     title: 'Переместить блюдо',
-    body: el(
-      'div',
-      { class: 'slot-dialog' },
-      el('p', { class: 'slot-dialog__summary' }, `«${recipe.title}» — ${describeSlot(from)}`),
-      picker.element,
-      status,
-    ),
-    footer: [cancelButton, confirmButton],
-    variant: 'center',
+    intro: el('p', { class: 'slot-dialog__summary' }, `«${recipe.title}» — ${describeSlot(from)}`),
+    weekStart,
+    today,
+    selected: from,
+    describeTarget: (to) => describeTarget(from, to),
+    onConfirm(to) {
+      const displaced = getRecipe(getMeal(to.date, to.meal));
+      if (!moveMeal(from, to)) return false;
+      announceMove(recipe, displaced, to);
+      onMoved(to);
+      return true;
+    },
     onClose,
   });
-  cancelButton.addEventListener('click', () => dialog.close());
-  confirmButton.addEventListener('click', confirm);
-  return dialog;
 }
