@@ -3,6 +3,7 @@ import { MEALS, getMeal } from '../../core/store.js';
 import { getRecipe } from '../../data/recipes.js';
 import { formatDayLong, formatWeekdayShort, parseIsoDate } from '../../utils/dates.js';
 import { el } from '../../utils/dom.js';
+import { playEnter } from './motion.js';
 import { MEAL_OPTIONS, getWeekDates } from './planner.js';
 
 let pickerCount = 0;
@@ -57,6 +58,7 @@ export function createSlotPicker({ weekStart, today, selected, onChange }) {
   function selectDate(date) {
     state.date = date;
     renderMeals();
+    playEnter(mealList, 'fade');
     onChange(getSlot());
   }
 
@@ -131,6 +133,7 @@ export function createSlotPicker({ weekStart, today, selected, onChange }) {
     state.date = getWeekDates(nextWeekStart)[dayIndex];
     renderDays();
     renderMeals();
+    playEnter(dayList, 'fade');
     onChange(getSlot());
   }
 

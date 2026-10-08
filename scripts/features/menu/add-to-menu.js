@@ -6,6 +6,7 @@ import { getRecipe } from '../../data/recipes.js';
 import { parseIsoDate, startOfWeek, toIsoDate } from '../../utils/dates.js';
 import { el } from '../../utils/dom.js';
 import { createDishThumb } from './dish.js';
+import { playEnter } from './motion.js';
 import { describeSlot, suggestMeal } from './planner.js';
 import { createSlotPicker } from './slot-picker.js';
 import { createWeekSwitcher } from './week-switcher.js';
@@ -40,6 +41,7 @@ export function openAddToMenu(recipeId) {
 
   function renderTarget(slot) {
     const target = describeTarget(recipe, slot);
+    if (status.textContent !== target.text) playEnter(status, 'fade');
     status.textContent = target.text;
     confirmButton.textContent = target.action;
     confirmButton.disabled = !target.allowed;

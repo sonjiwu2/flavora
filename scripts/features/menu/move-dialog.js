@@ -3,6 +3,7 @@ import { showToast } from '../../components/toast.js';
 import { getMeal, moveMeal } from '../../core/store.js';
 import { getRecipe } from '../../data/recipes.js';
 import { el } from '../../utils/dom.js';
+import { playEnter } from './motion.js';
 import { describeSlot, isSameSlot } from './planner.js';
 import { createSlotPicker } from './slot-picker.js';
 
@@ -40,6 +41,7 @@ export function openMoveDialog({ from, weekStart, today, onMoved, onClose }) {
 
   function renderTarget(to) {
     const target = describeTarget(from, to);
+    if (status.textContent !== target.text) playEnter(status, 'fade');
     status.textContent = target.text;
     confirmButton.textContent = target.action;
     confirmButton.disabled = !target.allowed;

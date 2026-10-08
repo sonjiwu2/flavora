@@ -6,6 +6,7 @@ import { formatDayLong, formatWeekdayShort, isWeekend, parseIsoDate } from '../.
 import { el } from '../../utils/dom.js';
 import { createActionsMenu } from './actions-menu.js';
 import { createDishThumbLink, createDurationMeta } from './dish.js';
+import { flyFrom, isRendered, playEnter, replaceWithMotion } from './motion.js';
 import { MEAL_OPTIONS, describeSlot, getWeekDates } from './planner.js';
 
 const RAIL_ICON_SIZE = 30;
@@ -13,10 +14,6 @@ const FOCUS_TARGETS = '.menu-actions__toggle, .menu-add';
 
 function joinClasses(...names) {
   return names.filter(Boolean).join(' ');
-}
-
-function isRendered(element) {
-  return element.getClientRects().length > 0;
 }
 
 function createRail() {
@@ -40,6 +37,7 @@ export function createBoard({ weekStart, today, selectedDay, handlers }) {
   const cells = [];
   const dayElements = new Map();
   const tabElements = new Map();
+  let shownDay = null;
 
   function createAddButton(slot) {
     return el(
@@ -74,13 +72,45 @@ export function createBoard({ weekStart, today, selectedDay, handlers }) {
     );
   }
 
-  function renderCell(cell) {
-    const recipeId = getMeal(cell.slot.date, cell.slot.meal);
-    if (recipeId === cell.recipeId) return;
-    cell.recipeId = recipeId;
-    cell.content.replaceChildren(
-      recipeId === null ? createAddButton(cell.slot) : createDish(cell.slot, getRecipe(recipeId)),
-    );
+  function readMeal(cell) {
+    return getMeal(cell.slot.date, cell.slot.meal);
+  }
+
+  function createContent(cell) {
+    return cell.recipeId === null
+      ? createAddButton(cell.slot)
+      : createDish(cell.slot, getRecipe(cell.recipeId));
+  }
+
+  function findDepartures(changedCells) {
+    const departures = new Map();
+    for (const cell of changedCells) {
+      if (cell.recipeId !== null && isRendered(cell.content)) {
+        departures.set(cell.recipeId, cell.content.getBoundingClientRect());
+      }
+    }
+    return departures;
+  }
+
+  function findFlights(changedCells) {
+    const departures = findDepartures(changedCells);
+    const flights = new Map();
+    for (const cell of changedCells) {
+      const origin = departures.get(readMeal(cell));
+      if (origin && isRendered(cell.content)) flights.set(cell, origin);
+    }
+    return flights;
+  }
+
+  function changeCell(cell, { flies, departs }) {
+    cell.recipeId = readMeal(cell);
+    const content = createContent(cell);
+    const enter = cell.recipeId === null ? 'fade' : 'pop';
+    replaceWithMotion(cell.content, content, {
+      enter: flies ? null : enter,
+      leave: departs ? 'fade' : null,
+    });
+    return content;
   }
 
   function createCell(date, meal) {
@@ -96,13 +126,14 @@ export function createBoard({ weekStart, today, selectedDay, handlers }) {
       ),
       content,
     );
-    const cell = { slot: { date, meal: meal.id }, element, content, recipeId: undefined };
-    renderCell(cell);
+    const cell = { slot: { date, meal: meal.id }, element, content, recipeId: null };
+    cell.recipeId = readMeal(cell);
+    content.append(createContent(cell));
     cells.push(cell);
     return element;
   }
 
-  function createDay(date) {
+  function createDay(date, order) {
     const parsed = parseIsoDate(date);
     const isToday = date === today;
     const headingId = `menu-day-${date}`;
@@ -136,6 +167,7 @@ export function createBoard({ weekStart, today, selectedDay, handlers }) {
       ),
       MEAL_OPTIONS.map((meal) => createCell(date, meal)),
     );
+    element.style.setProperty('--menu-order', order);
     dayElements.set(date, element);
     return element;
   }
@@ -159,24 +191,45 @@ export function createBoard({ weekStart, today, selectedDay, handlers }) {
     return element;
   }
 
-  function selectDay(date) {
+  function showDay(date) {
     for (const [tabDate, tab] of tabElements) {
       tab.setAttribute('aria-pressed', String(tabDate === date));
     }
     for (const [dayDate, day] of dayElements) {
       day.classList.toggle('menu-day--selected', dayDate === date);
     }
+    shownDay = date;
+  }
+
+  function selectDay(date) {
+    if (date === shownDay) return;
+    const motion = date > shownDay ? 'forward' : 'backward';
+    showDay(date);
+    playEnter(dayElements.get(date), motion);
   }
 
   function refresh() {
-    cells.forEach(renderCell);
+    const changedCells = cells.filter((cell) => readMeal(cell) !== cell.recipeId);
+    const flights = findFlights(changedCells);
+    const flownRecipes = new Set([...flights.keys()].map(readMeal));
+    const landed = changedCells.map((cell) => {
+      const isDish = cell.recipeId !== null;
+      const content = changeCell(cell, {
+        flies: flights.has(cell),
+        departs: isDish && !flownRecipes.has(cell.recipeId),
+      });
+      return { cell, content };
+    });
+    for (const { cell, content } of landed) {
+      if (flights.has(cell)) flyFrom(content, flights.get(cell));
+    }
   }
 
   function focusCell(slot) {
     const cell = cells.find(
       (candidate) => candidate.slot.date === slot.date && candidate.slot.meal === slot.meal,
     );
-    const target = cell?.content.querySelector(FOCUS_TARGETS);
+    const target = [...(cell?.content.querySelectorAll(FOCUS_TARGETS) ?? [])].at(-1);
     if (!target || !isRendered(target)) return false;
     target.focus();
     return true;
@@ -192,6 +245,6 @@ export function createBoard({ weekStart, today, selectedDay, handlers }) {
     ),
     el('div', { class: 'menu-board' }, createRail(), dates.map(createDay)),
   );
-  selectDay(selectedDay);
+  showDay(selectedDay);
   return { element, refresh, focusCell };
 }

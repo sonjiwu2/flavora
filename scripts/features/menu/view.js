@@ -5,6 +5,7 @@ import { isIsoDate, parseIsoDate, toIsoDate } from '../../utils/dates.js';
 import { createDisposer, el, listen } from '../../utils/dom.js';
 import { createBoard } from './board.js';
 import { createMealActions } from './meal-actions.js';
+import { replaceWithMotion } from './motion.js';
 import { pickDefaultDay, resolveWeekStart } from './planner.js';
 import { createWeekSwitcher } from './week-switcher.js';
 
@@ -34,7 +35,7 @@ export function mount(outlet, route) {
     getToday: () => state.today,
   });
 
-  function showWeek(weekStart) {
+  function showWeek(weekStart, motion = null) {
     state.weekStart = weekStart;
     state.board = createBoard({
       weekStart,
@@ -42,7 +43,7 @@ export function mount(outlet, route) {
       selectedDay: pickDefaultDay(weekStart, state.today),
       handlers,
     });
-    boardHost.replaceChildren(state.board.element);
+    replaceWithMotion(boardHost, state.board.element, { enter: motion, leave: motion });
   }
 
   function refreshToday() {
@@ -53,13 +54,12 @@ export function mount(outlet, route) {
 
   const switcher = createWeekSwitcher({
     weekStart: state.weekStart,
-    onChange(weekStart) {
+    onChange(weekStart, direction) {
       updateAddress(MENU_PATH, { week: weekStart });
-      showWeek(weekStart);
+      showWeek(weekStart, direction);
     },
   });
 
-  showWeek(state.weekStart);
   outlet.append(
     el(
       'div',
@@ -74,6 +74,7 @@ export function mount(outlet, route) {
       boardHost,
     ),
   );
+  showWeek(state.weekStart, 'first');
 
   disposer.add(
     subscribe((change) => {

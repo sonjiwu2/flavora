@@ -6,6 +6,7 @@ import { getRecipe, recipes } from '../../data/recipes.js';
 import { el } from '../../utils/dom.js';
 import { pluralize } from '../../utils/format.js';
 import { createDishThumb, createDurationMeta } from './dish.js';
+import { playEnter } from './motion.js';
 import { filterRecipes, pickRecentFavorites } from './planner.js';
 
 const FAVORITES_LIMIT = 6;
@@ -170,5 +171,6 @@ export function openRecipePicker({ title, context, currentRecipeId = null, onSel
     results,
   );
   const dialog = openDialog({ title, body, variant: 'side', onClose });
+  playEnter(results, 'fade');
   return dialog;
 }
