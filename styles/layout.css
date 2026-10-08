@@ -182,13 +182,12 @@
 }
 
 .site-main[data-entering] {
-  animation: screen-enter var(--duration-panel) var(--ease-out);
+  animation: screen-enter var(--duration-base) var(--ease-out);
 }
 
 @keyframes screen-enter {
   from {
     opacity: 0;
-    transform: translateY(0.5rem);
   }
 }
 
