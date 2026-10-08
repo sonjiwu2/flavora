@@ -60,7 +60,6 @@
   --shadow-soft: 0 8px 24px rgb(36 28 24 / 10%);
   --shadow-panel: 0 18px 48px rgb(36 28 24 / 22%);
 
-  --z-header: 10;
   --z-popover: 50;
   --z-dialog: 100;
   --z-toast: 200;
