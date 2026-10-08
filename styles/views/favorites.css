@@ -40,7 +40,12 @@
 }
 
 .favorites__results {
+  position: relative;
   min-width: 0;
+}
+
+.favorites__results > .empty-state {
+  animation: recipe-list-soft-enter var(--duration-panel) var(--ease-out);
 }
 
 .favorites__storage-note {

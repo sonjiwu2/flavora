@@ -19,6 +19,65 @@
   min-width: 0;
 }
 
+.recipe-grid[data-entering] > .recipe-card:nth-child(-n + 9) {
+  animation: recipe-card-enter var(--duration-panel) var(--ease-out) backwards;
+  animation-delay: calc(var(--duration-fast) / 8 * var(--recipe-card-order, 0));
+}
+
+.recipe-grid > :nth-child(2) {
+  --recipe-card-order: 1;
+}
+
+.recipe-grid > :nth-child(3) {
+  --recipe-card-order: 2;
+}
+
+.recipe-grid > :nth-child(4) {
+  --recipe-card-order: 3;
+}
+
+.recipe-grid > :nth-child(5) {
+  --recipe-card-order: 4;
+}
+
+.recipe-grid > :nth-child(6) {
+  --recipe-card-order: 5;
+}
+
+.recipe-grid > :nth-child(7) {
+  --recipe-card-order: 6;
+}
+
+.recipe-grid > :nth-child(8) {
+  --recipe-card-order: 7;
+}
+
+.recipe-grid > :nth-child(9) {
+  --recipe-card-order: 8;
+}
+
+@keyframes recipe-card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem);
+  }
+}
+
+@keyframes recipe-list-soft-enter {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+}
+
+.recipe-card--leaving {
+  position: absolute;
+  inset-block-start: var(--leaving-top, 0);
+  inset-inline-start: var(--leaving-left, 0);
+  width: var(--leaving-width, auto);
+  pointer-events: none;
+}
+
 .recipe-card__media {
   grid-column: 1 / -1;
   aspect-ratio: 3 / 2;
@@ -26,6 +85,7 @@
   overflow: hidden;
   border-radius: var(--radius-md);
   background: var(--color-surface-muted);
+  transition: transform var(--duration-fast) var(--ease-out);
 }
 
 .recipe-card__image {
@@ -103,6 +163,14 @@
   }
 }
 
+.recipe-card:has(.recipe-card__link:active) .recipe-card__media {
+  transform: scale(0.985);
+}
+
+.recipe-card__link:active {
+  color: var(--color-accent);
+}
+
 .favorite-button {
   display: inline-flex;
   align-items: center;
@@ -144,6 +212,9 @@
 .favorite-button[aria-pressed='true'] .favorite-button__fill {
   opacity: 1;
   transform: none;
+  transition:
+    opacity var(--duration-fast) var(--ease-out),
+    transform var(--duration-panel) var(--ease-spring);
 }
 
 .favorite-button:active .favorite-button__icon {
@@ -280,12 +351,14 @@
 
 @media (prefers-reduced-motion: reduce) {
   :root:not([data-motion='full']) .recipe-card:hover .recipe-card__image,
+  :root:not([data-motion='full']) .recipe-card:has(.recipe-card__link:active) .recipe-card__media,
   :root:not([data-motion='full']) .favorite-button:active .favorite-button__icon {
     transform: none;
   }
 }
 
 :root[data-motion='reduce'] .recipe-card:hover .recipe-card__image,
+:root[data-motion='reduce'] .recipe-card:has(.recipe-card__link:active) .recipe-card__media,
 :root[data-motion='reduce'] .favorite-button:active .favorite-button__icon {
   transform: none;
 }

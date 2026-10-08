@@ -12,6 +12,12 @@ import {
 } from '../catalog/controls.js';
 import { selectRecipes } from '../catalog/filter-recipes.js';
 import { FAVORITE_SORTS, formatSavedCount } from '../catalog/filter-state.js';
+import {
+  captureLayout,
+  fadeOutInPlace,
+  refreshSoftly,
+  settleFromLayout,
+} from '../catalog/motion.js';
 
 const EAGER_CARD_COUNT = 3;
 
@@ -88,7 +94,7 @@ export function mount(outlet) {
     sortControl.element,
   );
 
-  const grid = el('div', { class: 'recipe-grid' });
+  const grid = el('div', { class: 'recipe-grid', dataset: { entering: '' } });
   const emptyState = el(
     'div',
     { class: 'empty-state' },
@@ -124,11 +130,14 @@ export function mount(outlet) {
 
   function dropRemovedCards(saved) {
     const savedIds = new Set(saved.map((recipe) => recipe.id));
+    const removed = [];
     for (const [recipeId, card] of cards) {
       if (savedIds.has(recipeId)) continue;
       card.dispose();
       cards.delete(recipeId);
+      removed.push(card.element);
     }
+    return removed;
   }
 
   function pickContent(savedCount, shownCount) {
@@ -139,7 +148,7 @@ export function mount(outlet) {
   function render() {
     const { saved, addedAt } = readSavedRecipes();
     const entries = selectRecipes(saved, view, { addedAt });
-    dropRemovedCards(saved);
+    const removed = dropRemovedCards(saved);
     syncChildren(
       grid,
       entries.map((entry) => cardFor(entry.recipe)),
@@ -151,12 +160,19 @@ export function mount(outlet) {
     count.textContent = formatSavedCount(entries.length, saved.length);
     const content = pickContent(saved.length, entries.length);
     if (results.firstChild !== content) results.replaceChildren(content);
+    return removed;
   }
 
   function apply(nextView, { immediate = true } = {}) {
+    const shownBefore = [...grid.children];
     view = nextView;
     savedView = view;
+    delete grid.dataset.entering;
     render();
+    const isChanged =
+      shownBefore.length !== grid.children.length ||
+      shownBefore.some((card, index) => card !== grid.children[index]);
+    if (isChanged) refreshSoftly(results);
     announcer.announce(count.textContent, { immediate });
   }
 
@@ -177,8 +193,12 @@ export function mount(outlet) {
   function handleFavoritesChange() {
     const focusedCard = document.activeElement?.closest('.recipe-card') ?? null;
     const focusedIndex = focusedCard ? [...grid.children].indexOf(focusedCard) : -1;
-    render();
-    if (focusedIndex !== -1 && !focusedCard.isConnected) restoreFocus(focusedIndex);
+    const previousLayout = captureLayout(grid.children);
+    delete grid.dataset.entering;
+    const removed = render();
+    for (const card of removed) fadeOutInPlace(card, previousLayout.get(card), results);
+    settleFromLayout(previousLayout, grid.children);
+    if (focusedIndex !== -1 && !grid.contains(focusedCard)) restoreFocus(focusedIndex);
   }
 
   disposer.add(search.dispose);
