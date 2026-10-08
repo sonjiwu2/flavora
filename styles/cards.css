@@ -24,6 +24,10 @@
   animation-delay: calc(var(--duration-fast) / 8 * var(--recipe-card-order, 0));
 }
 
+.recipe-grid[data-entering] > .recipe-card:first-child {
+  animation-name: recipe-card-lift;
+}
+
 .recipe-grid > :nth-child(2) {
   --recipe-card-order: 1;
 }
@@ -59,6 +63,12 @@
 @keyframes recipe-card-enter {
   from {
     opacity: 0;
+    transform: translateY(0.75rem);
+  }
+}
+
+@keyframes recipe-card-lift {
+  from {
     transform: translateY(0.75rem);
   }
 }
