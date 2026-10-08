@@ -25,9 +25,10 @@ function currentTheme() {
 }
 
 function syncBrowserChrome() {
-  const themeColor = document.querySelector('meta[name="theme-color"]');
-  if (!themeColor) return;
-  themeColor.content = getComputedStyle(root).getPropertyValue('--color-bg').trim();
+  const background = getComputedStyle(root).getPropertyValue('--color-bg').trim();
+  for (const themeColor of document.querySelectorAll('meta[name="theme-color"]')) {
+    themeColor.content = background;
+  }
 }
 
 function ignoreSkippedTransition() {}
