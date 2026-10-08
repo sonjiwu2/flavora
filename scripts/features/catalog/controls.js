@@ -21,18 +21,43 @@ export function syncChildren(container, nodes) {
 }
 
 export function createChip(label, { removeLabel, onRemove, tagName = 'li' }) {
+  const text = el('span', { class: 'chip__text' }, label);
   const removeButton = el(
     'button',
     { class: 'chip__remove', type: 'button', 'aria-label': removeLabel, on: { click: onRemove } },
     icon('close', { size: CHIP_ICON_SIZE }),
   );
-  const element = el(
-    tagName,
-    { class: 'chip' },
-    el('span', { class: 'chip__text' }, label),
-    removeButton,
-  );
-  return { element, removeButton };
+  const element = el(tagName, { class: 'chip' }, text, removeButton);
+
+  function setLabel(nextLabel, nextRemoveLabel) {
+    if (text.textContent !== nextLabel) text.textContent = nextLabel;
+    removeButton.setAttribute('aria-label', nextRemoveLabel);
+  }
+
+  return { element, removeButton, setLabel };
+}
+
+export function createKeyedChips({ describe, onRemove }) {
+  const chips = new Map();
+
+  function chipFor(item) {
+    const { label, removeLabel } = describe(item);
+    let chip = chips.get(item.key);
+    if (chip) chip.setLabel(label, removeLabel);
+    else {
+      chip = createChip(label, { removeLabel, onRemove: () => onRemove(item.key) });
+      chips.set(item.key, chip);
+    }
+    return chip;
+  }
+
+  return function sync(items) {
+    const wanted = new Set(items.map((item) => item.key));
+    for (const key of [...chips.keys()]) {
+      if (!wanted.has(key)) chips.delete(key);
+    }
+    return items.map(chipFor);
+  };
 }
 
 export function focusAfterRemoval(removeButtons, removedIndex, fallback) {

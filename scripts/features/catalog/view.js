@@ -5,7 +5,7 @@ import { recipes } from '../../data/recipes.js';
 import { createDisposer, el, listen } from '../../utils/dom.js';
 import {
   createCategoryTabs,
-  createChip,
+  createKeyedChips,
   createResultAnnouncer,
   createSearchField,
   createSortControl,
@@ -28,6 +28,7 @@ import {
   toggleQuickTime,
 } from './filter-state.js';
 import { openFiltersPanel } from './filters-panel.js';
+import { captureLayout, refreshSoftly, settleFromLayout } from './motion.js';
 
 const ROUTE_PATH = '/recipes';
 const EAGER_CARD_COUNT = 3;
@@ -89,6 +90,7 @@ export function mount(outlet, route) {
   let filters = readInitialFilters(route);
   let panel = null;
   let addressTimer = null;
+  let shownSignature = null;
 
   setPageTitle(TEXT.title);
 
@@ -164,7 +166,7 @@ export function mount(outlet, route) {
     ),
   );
 
-  const grid = el('div', { class: 'recipe-grid' });
+  const grid = el('div', { class: 'recipe-grid', dataset: { entering: '' } });
   const emptyState = el(
     'div',
     { class: 'empty-state' },
@@ -173,6 +175,7 @@ export function mount(outlet, route) {
     el('button', { class: 'button', type: 'button', on: { click: resetAll } }, TEXT.emptyAction),
   );
   const results = el('div', { class: 'catalog__results' });
+  const syncChips = createKeyedChips({ describe: describeChip, onRemove: removeFilter });
 
   function cancelAddressTimer() {
     if (addressTimer !== null) window.clearTimeout(addressTimer);
@@ -213,21 +216,26 @@ export function mount(outlet, route) {
   }
 
   function renderResults(entries) {
+    const signature = entries.map((entry) => entry.recipe.id).join(' ');
+    const isChanged = shownSignature !== null && shownSignature !== signature;
+    shownSignature = signature;
+    if (isChanged) delete grid.dataset.entering;
     syncChildren(grid, entries.map(cardFor));
     const content = entries.length > 0 ? grid : emptyState;
     if (results.firstChild !== content) results.replaceChildren(content);
+    if (isChanged) refreshSoftly(results);
+  }
+
+  function describeChip(filter) {
+    return { label: filter.label, removeLabel: `${TEXT.removeFilterPrefix}${filter.label}` };
   }
 
   function renderActiveFilters() {
-    const active = describeActiveFilters(filters);
-    const chips = active.map((filter, index) =>
-      createChip(filter.label, {
-        removeLabel: `${TEXT.removeFilterPrefix}${filter.label}`,
-        onRemove: () => removeFilter(filter, index),
-      }),
-    );
-    chipList.replaceChildren(...chips.map((chip) => chip.element), resetItem);
-    chipList.hidden = active.length === 0;
+    const previousLayout = captureLayout(chipList.children);
+    const chips = syncChips(describeActiveFilters(filters));
+    syncChildren(chipList, [...chips.map((chip) => chip.element), resetItem]);
+    chipList.hidden = chips.length === 0;
+    settleFromLayout(previousLayout, chipList.children);
   }
 
   function renderFiltersCount() {
@@ -265,8 +273,11 @@ export function mount(outlet, route) {
     count.focus();
   }
 
-  function removeFilter(filter, index) {
-    apply(filter.remove(filters));
+  function removeFilter(key) {
+    const active = describeActiveFilters(filters);
+    const index = active.findIndex((filter) => filter.key === key);
+    if (index === -1) return;
+    apply(active[index].remove(filters));
     focusAfterRemoval([...chipList.querySelectorAll('.chip__remove')], index, count);
   }
 

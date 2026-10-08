@@ -38,21 +38,38 @@
   color: var(--color-on-ink);
 }
 
+.catalog__filters-button {
+  position: relative;
+}
+
 .catalog__filters-count {
+  position: absolute;
+  inset-block-start: calc(var(--space-2) * -1);
+  inset-inline-end: calc(var(--space-2) * -1);
   display: inline-grid;
   place-items: center;
   min-width: var(--space-5);
   min-height: var(--space-5);
   padding-inline: var(--space-1);
+  border: 2px solid var(--color-bg);
   border-radius: var(--radius-pill);
   background: var(--color-accent);
   color: var(--color-on-accent);
   font-size: var(--text-small);
   line-height: var(--leading-tight);
+  animation: catalog-pop var(--duration-base) var(--ease-spring);
 }
 
-.catalog__filters-count[hidden] {
-  display: none;
+.catalog__chips > .chip,
+.product-field__chips > .chip {
+  animation: catalog-pop var(--duration-base) var(--ease-spring);
+}
+
+@keyframes catalog-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
 }
 
 .catalog__status {
@@ -75,12 +92,12 @@
   min-width: 0;
 }
 
-.catalog__chips[hidden] {
-  display: none;
-}
-
 .catalog__results {
   min-width: 0;
+}
+
+.catalog__results > .empty-state {
+  animation: recipe-list-soft-enter var(--duration-panel) var(--ease-out);
 }
 
 .filters-panel {
@@ -98,6 +115,23 @@
   margin: 0;
   padding: 0;
   border: 0;
+}
+
+.filters-panel > .filters-panel__group {
+  animation: recipe-list-soft-enter var(--duration-panel) var(--ease-out) backwards;
+  animation-delay: calc(var(--duration-fast) / 3 * var(--filters-group-order, 0));
+}
+
+.filters-panel__group:nth-child(2) {
+  --filters-group-order: 1;
+}
+
+.filters-panel__group:nth-child(3) {
+  --filters-group-order: 2;
+}
+
+.filters-panel__group:nth-child(4) {
+  --filters-group-order: 3;
 }
 
 .filters-panel__legend {
@@ -168,9 +202,19 @@ legend.filters-panel__legend {
   background: var(--color-surface);
 }
 
-.product-field__options[hidden],
-.product-field__chips[hidden] {
-  display: none;
+.product-field__options,
+.product-field__empty,
+.product-field__more,
+.product-field__pending {
+  transform-origin: top center;
+  animation: product-options-enter var(--duration-base) var(--ease-out);
+}
+
+@keyframes product-options-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-0.25rem) scaleY(0.97);
+  }
 }
 
 .product-field__option {

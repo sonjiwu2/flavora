@@ -1,8 +1,9 @@
 import { icon } from '../../components/icons.js';
 import { el, listen } from '../../utils/dom.js';
 import { normalizeSearchText } from '../../utils/format.js';
-import { createChip, focusAfterRemoval } from './controls.js';
+import { createKeyedChips, focusAfterRemoval, syncChildren } from './controls.js';
 import { suggestIngredients } from './filter-state.js';
+import { captureLayout, settleFromLayout } from './motion.js';
 
 const TEXT = Object.freeze({
   allSelected: 'Все продукты уже выбраны',
@@ -218,17 +219,20 @@ export function createProductField({
     if (!combo.contains(event.relatedTarget)) close();
   }
 
+  function describeChip({ key }) {
+    const name = namesById.get(key) ?? key;
+    return { label: name, removeLabel: `${TEXT.removeLabel}${name}` };
+  }
+
   function renderChips() {
-    const created = selectedIds.map((id) => {
-      const name = namesById.get(id) ?? id;
-      return createChip(name, {
-        removeLabel: `${TEXT.removeLabel}${name}`,
-        onRemove: () => remove(id),
-      });
-    });
-    chips.replaceChildren(...created.map((chip) => chip.element));
+    const previousLayout = captureLayout(chips.children);
+    const created = syncChips(selectedIds.map((id) => ({ key: id })));
+    syncChildren(
+      chips,
+      created.map((chip) => chip.element),
+    );
     chips.hidden = created.length === 0;
-    return created.map((chip) => chip.removeButton);
+    settleFromLayout(previousLayout, chips.children);
   }
 
   function remove(id) {
@@ -244,6 +248,7 @@ export function createProductField({
     if (isOpen()) open({ activate: 'none' });
   }
 
+  const syncChips = createKeyedChips({ describe: describeChip, onRemove: remove });
   const stopListening = [
     listen(input, 'input', () => {
       clearPending();
