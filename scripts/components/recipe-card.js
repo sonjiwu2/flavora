@@ -44,10 +44,7 @@ function createMetaItem(iconName, hiddenLabel, text) {
   );
 }
 
-export function createRecipeCard(
-  recipe,
-  { headingLevel = 2, eager = false, priority = false, matchLabel = null } = {},
-) {
+export function createRecipeCard(recipe, { eager = false, priority = false } = {}) {
   const favorite = createFavoriteButton(recipe);
   favorite.element.classList.add('recipe-card__favorite');
   const match = el('p', { class: 'recipe-card__match', hidden: true });
@@ -56,7 +53,7 @@ export function createRecipeCard(
     { class: 'recipe-card', dataset: { recipeId: recipe.id } },
     el('div', { class: 'recipe-card__media' }, createImage(recipe, { eager, priority })),
     el(
-      `h${headingLevel}`,
+      'h2',
       { class: 'recipe-card__title' },
       el(
         'a',
@@ -76,9 +73,8 @@ export function createRecipeCard(
 
   function setMatchLabel(text) {
     match.textContent = text ?? '';
-    match.hidden = text === null || text === undefined || text === '';
+    match.hidden = match.textContent === '';
   }
 
-  setMatchLabel(matchLabel);
   return { element, dispose: favorite.dispose, setMatchLabel };
 }

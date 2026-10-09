@@ -1,3 +1,19 @@
+.recipe-list {
+  container: recipe-list / inline-size;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-5);
+}
+
+.recipe-list__results {
+  position: relative;
+  min-width: 0;
+}
+
+.recipe-list__results > .empty-state {
+  animation: recipe-list-soft-enter var(--duration-panel) var(--ease-out);
+}
+
 .recipe-grid {
   --recipe-grid-gap: var(--space-5);
   --recipe-card-min: 17rem;
@@ -326,6 +342,12 @@
 
 .result-count:focus-visible {
   border-radius: var(--radius-sm);
+}
+
+@media (width < 40rem) {
+  .recipe-list {
+    gap: var(--space-4);
+  }
 }
 
 @container recipe-list (width < 30rem) {

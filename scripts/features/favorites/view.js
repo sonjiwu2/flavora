@@ -1,10 +1,11 @@
-import { createRecipeCard } from '../../components/recipe-card.js';
 import { buildHref, setPageTitle } from '../../core/router.js';
 import { getFavorites, subscribe } from '../../core/store.js';
 import { getRecipe } from '../../data/recipes.js';
 import { createDisposer, el, listen } from '../../utils/dom.js';
 import {
+  createCardPool,
   createCategoryTabs,
+  createEmptyState,
   createResultAnnouncer,
   createSearchField,
   createSortControl,
@@ -18,8 +19,6 @@ import {
   refreshSoftly,
   settleFromLayout,
 } from '../catalog/motion.js';
-
-const EAGER_CARD_COUNT = 3;
 
 const TEXT = Object.freeze({
   title: 'Избранное',
@@ -58,7 +57,7 @@ function readSavedRecipes() {
 
 export function mount(outlet) {
   const disposer = createDisposer();
-  const cards = new Map();
+  const cards = createCardPool();
   let view = savedView;
 
   setPageTitle(TEXT.title);
@@ -68,7 +67,6 @@ export function mount(outlet) {
     placeholder: TEXT.searchPlaceholder,
     compactPlaceholder: TEXT.searchCompactPlaceholder,
     value: view.query,
-    className: 'favorites__search-field',
   });
   const sortControl = createSortControl({
     label: TEXT.sort,
@@ -81,10 +79,10 @@ export function mount(outlet) {
     label: TEXT.categories,
     selected: view.category,
     onSelect: (category) => apply({ ...view, category }),
+    className: 'favorites__tabs',
   });
   const count = el('p', { class: 'result-count favorites__count', tabindex: '-1' });
   const announcer = createResultAnnouncer();
-  tabs.element.classList.add('favorites__tabs');
   const controls = el(
     'div',
     { class: 'favorites__controls' },
@@ -95,50 +93,22 @@ export function mount(outlet) {
   );
 
   const grid = el('div', { class: 'recipe-grid', dataset: { entering: '' } });
-  const emptyState = el(
-    'div',
-    { class: 'empty-state' },
-    el('h2', { class: 'empty-state__title' }, TEXT.emptyTitle),
-    el('p', { class: 'empty-state__text' }, TEXT.emptyText),
+  const emptyState = createEmptyState(
+    TEXT.emptyTitle,
+    TEXT.emptyText,
     el('a', { class: 'button', href: buildHref('/recipes') }, TEXT.emptyAction),
     el('p', { class: 'favorites__storage-note' }, TEXT.storageNote),
   );
-  const notFoundState = el(
-    'div',
-    { class: 'empty-state' },
-    el('h2', { class: 'empty-state__title' }, TEXT.notFoundTitle),
-    el('p', { class: 'empty-state__text' }, TEXT.notFoundText),
+  const notFoundState = createEmptyState(
+    TEXT.notFoundTitle,
+    TEXT.notFoundText,
     el(
       'button',
       { class: 'button', type: 'button', on: { click: resetSearch } },
       TEXT.notFoundAction,
     ),
   );
-  const results = el('div', { class: 'favorites__results' });
-
-  function cardFor(recipe) {
-    let card = cards.get(recipe.id);
-    if (!card) {
-      card = createRecipeCard(recipe, {
-        eager: cards.size < EAGER_CARD_COUNT,
-        priority: cards.size === 0,
-      });
-      cards.set(recipe.id, card);
-    }
-    return card.element;
-  }
-
-  function dropRemovedCards(saved) {
-    const savedIds = new Set(saved.map((recipe) => recipe.id));
-    const removed = [];
-    for (const [recipeId, card] of cards) {
-      if (savedIds.has(recipeId)) continue;
-      card.dispose();
-      cards.delete(recipeId);
-      removed.push(card.element);
-    }
-    return removed;
-  }
+  const results = el('div', { class: 'recipe-list__results' });
 
   function pickContent(savedCount, shownCount) {
     if (savedCount === 0) return emptyState;
@@ -148,10 +118,10 @@ export function mount(outlet) {
   function render() {
     const { saved, addedAt } = readSavedRecipes();
     const entries = selectRecipes(saved, view, { addedAt });
-    const removed = dropRemovedCards(saved);
+    const removed = cards.prune(new Set(saved.map((recipe) => recipe.id)));
     syncChildren(
       grid,
-      entries.map((entry) => cardFor(entry.recipe)),
+      entries.map((entry) => cards.take(entry.recipe).element),
     );
     if (search.input.value !== view.query) search.input.value = view.query;
     sortControl.update(SORT_OPTIONS, view.sort);
@@ -204,10 +174,7 @@ export function mount(outlet) {
   disposer.add(search.dispose);
   disposer.add(tabs.dispose);
   disposer.add(announcer.dispose);
-  disposer.add(() => {
-    for (const card of cards.values()) card.dispose();
-    cards.clear();
-  });
+  disposer.add(cards.dispose);
   disposer.add(
     subscribe((change) => {
       if (change.type === 'favorites') handleFavoritesChange();
@@ -222,7 +189,7 @@ export function mount(outlet) {
   outlet.append(
     el(
       'div',
-      { class: 'favorites' },
+      { class: 'recipe-list' },
       el(
         'header',
         { class: 'favorites__header' },

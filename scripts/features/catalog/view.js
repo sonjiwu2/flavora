@@ -1,10 +1,11 @@
 import { icon } from '../../components/icons.js';
-import { createRecipeCard } from '../../components/recipe-card.js';
 import { buildHref, setPageTitle, updateAddress } from '../../core/router.js';
 import { recipes } from '../../data/recipes.js';
 import { createDisposer, el, listen } from '../../utils/dom.js';
 import {
+  createCardPool,
   createCategoryTabs,
+  createEmptyState,
   createKeyedChips,
   createResultAnnouncer,
   createSearchField,
@@ -28,7 +29,6 @@ import { openFiltersPanel } from './filters-panel.js';
 import { captureLayout, refreshSoftly, settleFromLayout } from './motion.js';
 
 const ROUTE_PATH = '/recipes';
-const EAGER_CARD_COUNT = 3;
 const ADDRESS_DELAY_MS = 300;
 
 const TEXT = Object.freeze({
@@ -81,7 +81,7 @@ function readInitialFilters(route) {
 
 export function mount(outlet, route) {
   const disposer = createDisposer();
-  const cards = new Map();
+  const cards = createCardPool();
   const coarsePointer = window.matchMedia('(pointer: coarse)');
   const reopenedFromCatalog = leavingCatalog;
   let filters = readInitialFilters(route);
@@ -136,7 +136,6 @@ export function mount(outlet, route) {
     options: sortOptions(filters),
     value: filters.sort,
     onChange: (sort) => apply({ ...filters, sort }),
-    className: 'catalog__sort',
   });
   const chipList = el('ul', {
     class: 'catalog__chips',
@@ -145,7 +144,7 @@ export function mount(outlet, route) {
   });
   const resetItem = el(
     'li',
-    { class: 'catalog__reset' },
+    {},
     el(
       'button',
       { class: 'button button--quiet button--small', type: 'button', on: { click: resetAll } },
@@ -154,15 +153,19 @@ export function mount(outlet, route) {
   );
 
   const grid = el('div', { class: 'recipe-grid', dataset: { entering: '' } });
-  const emptyState = el(
-    'div',
-    { class: 'empty-state' },
-    el('h2', { class: 'empty-state__title' }, TEXT.emptyTitle),
-    el('p', { class: 'empty-state__text' }, TEXT.emptyText),
+  const emptyState = createEmptyState(
+    TEXT.emptyTitle,
+    TEXT.emptyText,
     el('button', { class: 'button', type: 'button', on: { click: resetAll } }, TEXT.emptyAction),
   );
-  const results = el('div', { class: 'catalog__results' });
-  const syncChips = createKeyedChips({ describe: describeChip, onRemove: removeFilter });
+  const results = el('div', { class: 'recipe-list__results' });
+  const syncChips = createKeyedChips({
+    describe: (filter) => ({
+      label: filter.label,
+      removeLabel: TEXT.removeFilterPrefix + filter.label,
+    }),
+    onRemove: removeFilter,
+  });
 
   function cancelAddressTimer() {
     if (addressTimer !== null) window.clearTimeout(addressTimer);
@@ -189,15 +192,7 @@ export function mount(outlet, route) {
   }
 
   function cardFor(entry) {
-    let card = cards.get(entry.recipe.id);
-    if (!card) {
-      card = createRecipeCard(entry.recipe, {
-        eager: cards.size < EAGER_CARD_COUNT,
-        priority: cards.size === 0,
-      });
-      cards.set(entry.recipe.id, card);
-      disposer.add(card.dispose);
-    }
+    const card = cards.take(entry.recipe);
     card.setMatchLabel(entry.pantry ? formatPantryMatch(entry.pantry) : null);
     return card.element;
   }
@@ -211,10 +206,6 @@ export function mount(outlet, route) {
     const content = entries.length > 0 ? grid : emptyState;
     if (results.firstChild !== content) results.replaceChildren(content);
     if (isChanged) refreshSoftly(results);
-  }
-
-  function describeChip(filter) {
-    return { label: filter.label, removeLabel: `${TEXT.removeFilterPrefix}${filter.label}` };
   }
 
   function renderActiveFilters() {
@@ -283,6 +274,7 @@ export function mount(outlet, route) {
   }
 
   disposer.add(noteCatalogExit);
+  disposer.add(cards.dispose);
   disposer.add(search.dispose);
   disposer.add(tabs.dispose);
   disposer.add(announcer.dispose);
@@ -299,7 +291,7 @@ export function mount(outlet, route) {
   outlet.append(
     el(
       'div',
-      { class: 'catalog' },
+      { class: 'recipe-list' },
       el('h1', { class: 'page-title' }, TEXT.title),
       searchForm,
       tabs.element,

@@ -1,9 +1,11 @@
 import { icon } from '../../components/icons.js';
+import { createRecipeCard } from '../../components/recipe-card.js';
 import { CATEGORIES } from '../../data/categories.js';
 import { el, listen } from '../../utils/dom.js';
 
 const ANNOUNCE_DELAY_MS = 600;
 const CHIP_ICON_SIZE = 16;
+const EAGER_CARD_COUNT = 3;
 const SCROLL_EDGE_TOLERANCE = 2;
 const COMPACT_VIEWPORT_QUERY = '(max-width: 26rem)';
 
@@ -18,21 +20,60 @@ export function syncChildren(container, nodes) {
   });
 }
 
-export function createChip(label, { removeLabel, onRemove, tagName = 'li' }) {
+export function createCardPool() {
+  const cards = new Map();
+
+  function take(recipe) {
+    let card = cards.get(recipe.id);
+    if (!card) {
+      card = createRecipeCard(recipe, {
+        eager: cards.size < EAGER_CARD_COUNT,
+        priority: cards.size === 0,
+      });
+      cards.set(recipe.id, card);
+    }
+    return card;
+  }
+
+  function prune(keptIds) {
+    const removed = [];
+    for (const [recipeId, card] of cards) {
+      if (keptIds.has(recipeId)) continue;
+      card.dispose();
+      cards.delete(recipeId);
+      removed.push(card.element);
+    }
+    return removed;
+  }
+
+  return { take, prune, dispose: () => prune(new Set()) };
+}
+
+export function createEmptyState(title, text, ...actions) {
+  return el(
+    'div',
+    { class: 'empty-state' },
+    el('h2', { class: 'empty-state__title' }, title),
+    el('p', { class: 'empty-state__text' }, text),
+    actions,
+  );
+}
+
+function createChip(label, { removeLabel, onRemove }) {
   const text = el('span', { class: 'chip__text' }, label);
   const removeButton = el(
     'button',
     { class: 'chip__remove', type: 'button', 'aria-label': removeLabel, on: { click: onRemove } },
     icon('close', { size: CHIP_ICON_SIZE }),
   );
-  const element = el(tagName, { class: 'chip' }, text, removeButton);
+  const element = el('li', { class: 'chip' }, text, removeButton);
 
   function setLabel(nextLabel, nextRemoveLabel) {
     if (text.textContent !== nextLabel) text.textContent = nextLabel;
     removeButton.setAttribute('aria-label', nextRemoveLabel);
   }
 
-  return { element, removeButton, setLabel };
+  return { element, setLabel };
 }
 
 export function createKeyedChips({ describe, onRemove }) {
@@ -123,7 +164,7 @@ export function createSortControl({ label, options, value, onChange, className =
   }
 
   update(options, value);
-  return { element, select, update };
+  return { element, update };
 }
 
 export function createResultAnnouncer() {
@@ -150,7 +191,7 @@ export function createResultAnnouncer() {
   return { element, announce, dispose: cancel };
 }
 
-export function createCategoryTabs({ label, selected = null, onSelect }) {
+export function createCategoryTabs({ label, selected = null, onSelect, className = '' }) {
   const choices = [{ id: null, label: 'Все' }, ...CATEGORIES];
   const buttons = choices.map((choice) =>
     el(
@@ -168,7 +209,7 @@ export function createCategoryTabs({ label, selected = null, onSelect }) {
     { class: 'tabs tabs--scroll category-tabs__list', role: 'group', 'aria-label': label },
     buttons,
   );
-  const element = el('div', { class: 'category-tabs' }, list);
+  const element = el('div', { class: `category-tabs ${className}`.trim() }, list);
 
   function updateEdges() {
     const hiddenAfter = list.scrollWidth - list.clientWidth - list.scrollLeft;
