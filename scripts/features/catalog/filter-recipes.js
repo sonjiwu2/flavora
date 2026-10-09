@@ -2,8 +2,6 @@ import { getCategoryLabel } from '../../data/categories.js';
 import { ingredients } from '../../data/ingredients.js';
 import { normalizeSearchText } from '../../utils/format.js';
 
-export const SORT_MODES = Object.freeze(['default', 'title', 'fastest', 'slowest', 'recent']);
-
 const DEFAULT_CONTEXT = Object.freeze({ ingredients, getCategoryLabel });
 
 function ingredientName(ingredientId, context) {
