@@ -18,12 +18,20 @@ function lifetimeFor(text, action) {
   return Math.min(MAX_LIFETIME_MS, Math.max(minimum, readingTime));
 }
 
+export function removeAfterExit(element) {
+  element.inert = true;
+  element.setAttribute('aria-hidden', 'true');
+  const exitAnimations = element.getAnimations().map((animation) => animation.finished);
+  Promise.allSettled(exitAnimations).then(() => element.remove());
+}
+
 function dismiss(text) {
   const entry = visibleToasts.get(text);
   if (!entry) return;
   window.clearTimeout(entry.timer);
-  entry.element.remove();
   visibleToasts.delete(text);
+  entry.element.dataset.leaving = '';
+  removeAfterExit(entry.element);
 }
 
 function startCountdown(text) {

@@ -190,8 +190,37 @@ legend {
   font-weight: 600;
 }
 
-::view-transition-old(root),
-::view-transition-new(root) {
-  animation-duration: var(--duration-base);
-  animation-timing-function: var(--ease-out);
+:root[data-theme-spill]::view-transition-old(root),
+:root[data-theme-spill]::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+:root[data-theme-spill='out']::view-transition-new(root) {
+  animation: theme-spill-out var(--duration-slow) var(--ease-in-out) both;
+}
+
+:root[data-theme-spill='in']::view-transition-old(root) {
+  z-index: 1;
+  animation: theme-spill-in var(--duration-slow) var(--ease-in-out) both;
+}
+
+@keyframes theme-spill-out {
+  from {
+    clip-path: circle(0 at var(--theme-spill-x) var(--theme-spill-y));
+  }
+
+  to {
+    clip-path: circle(var(--theme-spill-radius) at var(--theme-spill-x) var(--theme-spill-y));
+  }
+}
+
+@keyframes theme-spill-in {
+  from {
+    clip-path: circle(var(--theme-spill-radius) at var(--theme-spill-x) var(--theme-spill-y));
+  }
+
+  to {
+    clip-path: circle(0 at var(--theme-spill-x) var(--theme-spill-y));
+  }
 }

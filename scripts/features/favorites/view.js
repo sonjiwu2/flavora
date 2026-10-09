@@ -1,10 +1,11 @@
-import { createRecipeCard } from '../../components/recipe-card.js';
 import { buildHref, setPageTitle } from '../../core/router.js';
 import { getFavorites, subscribe } from '../../core/store.js';
 import { getRecipe } from '../../data/recipes.js';
 import { createDisposer, el, listen } from '../../utils/dom.js';
 import {
+  createCardPool,
   createCategoryTabs,
+  createEmptyState,
   createResultAnnouncer,
   createSearchField,
   createSortControl,
@@ -12,10 +13,12 @@ import {
 } from '../catalog/controls.js';
 import { selectRecipes } from '../catalog/filter-recipes.js';
 import { FAVORITE_SORTS, formatSavedCount } from '../catalog/filter-state.js';
-import { rememberScroll } from '../catalog/scroll-memory.js';
-
-const EAGER_CARD_COUNT = 3;
-const SCROLL_STATE_KEY = 'favoritesScroll';
+import {
+  captureLayout,
+  fadeOutInPlace,
+  refreshSoftly,
+  settleFromLayout,
+} from '../catalog/motion.js';
 
 const TEXT = Object.freeze({
   title: 'Избранное',
@@ -54,8 +57,7 @@ function readSavedRecipes() {
 
 export function mount(outlet) {
   const disposer = createDisposer();
-  const cards = new Map();
-  const scrollMemory = rememberScroll(SCROLL_STATE_KEY);
+  const cards = createCardPool();
   let view = savedView;
 
   setPageTitle(TEXT.title);
@@ -65,7 +67,6 @@ export function mount(outlet) {
     placeholder: TEXT.searchPlaceholder,
     compactPlaceholder: TEXT.searchCompactPlaceholder,
     value: view.query,
-    className: 'favorites__search-field',
   });
   const sortControl = createSortControl({
     label: TEXT.sort,
@@ -78,59 +79,36 @@ export function mount(outlet) {
     label: TEXT.categories,
     selected: view.category,
     onSelect: (category) => apply({ ...view, category }),
+    className: 'favorites__tabs',
   });
-  const count = el('p', { class: 'result-count', tabindex: '-1' });
+  const count = el('p', { class: 'result-count favorites__count', tabindex: '-1' });
   const announcer = createResultAnnouncer();
   const controls = el(
     'div',
     { class: 'favorites__controls' },
-    el('div', { class: 'favorites__search', role: 'search' }, search.element, sortControl.element),
+    el('div', { class: 'favorites__search', role: 'search' }, search.element),
     tabs.element,
     count,
+    sortControl.element,
   );
 
-  const grid = el('div', { class: 'recipe-grid' });
-  const emptyState = el(
-    'div',
-    { class: 'empty-state' },
-    el('h2', { class: 'empty-state__title' }, TEXT.emptyTitle),
-    el('p', { class: 'empty-state__text' }, TEXT.emptyText),
+  const grid = el('div', { class: 'recipe-grid', dataset: { entering: '' } });
+  const emptyState = createEmptyState(
+    TEXT.emptyTitle,
+    TEXT.emptyText,
     el('a', { class: 'button', href: buildHref('/recipes') }, TEXT.emptyAction),
     el('p', { class: 'favorites__storage-note' }, TEXT.storageNote),
   );
-  const notFoundState = el(
-    'div',
-    { class: 'empty-state' },
-    el('h2', { class: 'empty-state__title' }, TEXT.notFoundTitle),
-    el('p', { class: 'empty-state__text' }, TEXT.notFoundText),
+  const notFoundState = createEmptyState(
+    TEXT.notFoundTitle,
+    TEXT.notFoundText,
     el(
       'button',
       { class: 'button', type: 'button', on: { click: resetSearch } },
       TEXT.notFoundAction,
     ),
   );
-  const results = el('div', { class: 'favorites__results' });
-
-  function cardFor(recipe) {
-    let card = cards.get(recipe.id);
-    if (!card) {
-      card = createRecipeCard(recipe, {
-        eager: cards.size < EAGER_CARD_COUNT,
-        priority: cards.size === 0,
-      });
-      cards.set(recipe.id, card);
-    }
-    return card.element;
-  }
-
-  function dropRemovedCards(saved) {
-    const savedIds = new Set(saved.map((recipe) => recipe.id));
-    for (const [recipeId, card] of cards) {
-      if (savedIds.has(recipeId)) continue;
-      card.dispose();
-      cards.delete(recipeId);
-    }
-  }
+  const results = el('div', { class: 'recipe-list__results' });
 
   function pickContent(savedCount, shownCount) {
     if (savedCount === 0) return emptyState;
@@ -140,10 +118,10 @@ export function mount(outlet) {
   function render() {
     const { saved, addedAt } = readSavedRecipes();
     const entries = selectRecipes(saved, view, { addedAt });
-    dropRemovedCards(saved);
+    const removed = cards.prune(new Set(saved.map((recipe) => recipe.id)));
     syncChildren(
       grid,
-      entries.map((entry) => cardFor(entry.recipe)),
+      entries.map((entry) => cards.take(entry.recipe).element),
     );
     if (search.input.value !== view.query) search.input.value = view.query;
     sortControl.update(SORT_OPTIONS, view.sort);
@@ -152,12 +130,19 @@ export function mount(outlet) {
     count.textContent = formatSavedCount(entries.length, saved.length);
     const content = pickContent(saved.length, entries.length);
     if (results.firstChild !== content) results.replaceChildren(content);
+    return removed;
   }
 
   function apply(nextView, { immediate = true } = {}) {
+    const shownBefore = [...grid.children];
     view = nextView;
     savedView = view;
+    delete grid.dataset.entering;
     render();
+    const isChanged =
+      shownBefore.length !== grid.children.length ||
+      shownBefore.some((card, index) => card !== grid.children[index]);
+    if (isChanged) refreshSoftly(results);
     announcer.announce(count.textContent, { immediate });
   }
 
@@ -178,19 +163,18 @@ export function mount(outlet) {
   function handleFavoritesChange() {
     const focusedCard = document.activeElement?.closest('.recipe-card') ?? null;
     const focusedIndex = focusedCard ? [...grid.children].indexOf(focusedCard) : -1;
-    render();
-    if (focusedIndex !== -1 && !focusedCard.isConnected) restoreFocus(focusedIndex);
+    const previousLayout = captureLayout(grid.children);
+    delete grid.dataset.entering;
+    const removed = render();
+    for (const card of removed) fadeOutInPlace(card, previousLayout.get(card), results);
+    settleFromLayout(previousLayout, grid.children);
+    if (focusedIndex !== -1 && !grid.contains(focusedCard)) restoreFocus(focusedIndex);
   }
 
-  disposer.add(scrollMemory.dispose);
-  disposer.add(listen(grid, 'click', scrollMemory.save, { capture: true }));
   disposer.add(search.dispose);
   disposer.add(tabs.dispose);
   disposer.add(announcer.dispose);
-  disposer.add(() => {
-    for (const card of cards.values()) card.dispose();
-    cards.clear();
-  });
+  disposer.add(cards.dispose);
   disposer.add(
     subscribe((change) => {
       if (change.type === 'favorites') handleFavoritesChange();
@@ -205,7 +189,7 @@ export function mount(outlet) {
   outlet.append(
     el(
       'div',
-      { class: 'favorites' },
+      { class: 'recipe-list' },
       el(
         'header',
         { class: 'favorites__header' },
@@ -219,6 +203,5 @@ export function mount(outlet) {
   );
 
   render();
-  scrollMemory.restore();
   return disposer.dispose;
 }

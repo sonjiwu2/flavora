@@ -24,8 +24,12 @@ function restartEnterAnimation(outlet) {
 export function createScreenChangeHandler(outlet) {
   let currentPath = null;
   let currentEntryId = null;
+  let hasNavigated = false;
 
   window.history.scrollRestoration = 'manual';
+  window.addEventListener('hashchange', () => {
+    hasNavigated = true;
+  });
   window.addEventListener(
     'scroll',
     () => {
@@ -35,15 +39,14 @@ export function createScreenChangeHandler(outlet) {
   );
 
   return function handleScreenChange(route) {
-    const isFirstScreen = currentPath === null;
+    const isInitialScreen = currentPath === null && !hasNavigated;
     const isSameScreen = route.path === currentPath;
     const knownEntryId = readEntryId();
     currentPath = route.path;
     currentEntryId = knownEntryId ?? createEntryId();
-    if (isSameScreen) return;
+    if (isSameScreen || isInitialScreen) return;
 
     restartEnterAnimation(outlet);
-    if (isFirstScreen) return;
     closeAllDialogs();
     window.scrollTo(0, knownEntryId === null ? 0 : (scrollPositions.get(knownEntryId) ?? 0));
     outlet.focus({ preventScroll: true });
