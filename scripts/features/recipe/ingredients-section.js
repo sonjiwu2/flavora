@@ -7,9 +7,17 @@ import { formatIngredientAmount } from '../../utils/quantities.js';
 const MIN_SERVINGS = 1;
 const DEFAULT_MAX_SERVINGS = 12;
 const SERVING_FORMS = ['порцию', 'порции', 'порций'];
+const TICK_CLASS = 'is-ticking';
 
-function servingsLabel(servings) {
-  return `На ${servings} ${pluralize(servings, SERVING_FORMS)}`;
+export function describeServings(servings) {
+  return `${servings} ${pluralize(servings, SERVING_FORMS)}`;
+}
+
+function replayTick(elements) {
+  if (elements.length === 0) return;
+  for (const element of elements) element.classList.remove(TICK_CLASS);
+  elements[0].getBoundingClientRect();
+  for (const element of elements) element.classList.add(TICK_CLASS);
 }
 
 function createIngredientRow(ingredient) {
@@ -42,7 +50,7 @@ function createStepperButton(iconName, label, onClick) {
   );
 }
 
-export function createIngredientsSection(recipe) {
+export function createIngredientsSection(recipe, { onServingsChange }) {
   const maxServings = Math.max(DEFAULT_MAX_SERVINGS, recipe.servings * 2);
   const rows = recipe.ingredients.map(createIngredientRow);
   const value = el('p', {
@@ -55,17 +63,23 @@ export function createIngredientsSection(recipe) {
   let servings = recipe.servings;
 
   function render() {
-    value.textContent = servingsLabel(servings);
+    const changed = [];
+    value.textContent = `На ${describeServings(servings)}`;
     decrease.disabled = servings <= MIN_SERVINGS;
     increase.disabled = servings >= maxServings;
     for (const row of rows) {
-      row.amount.textContent = formatIngredientAmount(row.ingredient, recipe.servings, servings);
+      const text = formatIngredientAmount(row.ingredient, recipe.servings, servings);
+      if (row.amount.textContent === text) continue;
+      row.amount.textContent = text;
+      changed.push(row.amount);
     }
+    return changed;
   }
 
   function change(delta) {
     servings = Math.min(maxServings, Math.max(MIN_SERVINGS, servings + delta));
-    render();
+    replayTick([value, ...render()]);
+    onServingsChange(servings);
     if (decrease.disabled) increase.focus();
     if (increase.disabled) decrease.focus();
   }
@@ -89,7 +103,7 @@ export function createIngredientsSection(recipe) {
     ),
     el(
       'ul',
-      { class: 'ingredients__list' },
+      { class: 'ingredients__list', role: 'list' },
       rows.map((row) => row.element),
     ),
   );

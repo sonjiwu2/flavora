@@ -53,9 +53,14 @@ function playSignal() {
   }
 }
 
+function describeFinished(timer) {
+  if (timer.stepLabel) return `Таймер шага ${timer.stepNumber} завершён: ${timer.stepLabel}`;
+  return `Таймер шага ${timer.stepNumber} «${timer.stepTitle}» завершён`;
+}
+
 function finish(timer) {
   timers.set(timer.key, completeTimer(timer));
-  showToast(`Таймер шага ${timer.stepNumber} «${timer.stepTitle}» завершён`);
+  showToast(describeFinished(timer));
   playSignal();
 }
 
@@ -133,8 +138,12 @@ export function subscribeTimers(listener) {
   return () => listeners.delete(listener);
 }
 
+function audioContextClass() {
+  return window.AudioContext ?? window.webkitAudioContext;
+}
+
 export function isTimerSoundSupported() {
-  return typeof (window.AudioContext ?? window.webkitAudioContext) === 'function';
+  return typeof audioContextClass() === 'function';
 }
 
 export function isTimerSoundEnabled() {
@@ -144,7 +153,7 @@ export function isTimerSoundEnabled() {
 export function setTimerSoundEnabled(enabled) {
   soundEnabled = enabled && isTimerSoundSupported();
   if (!soundEnabled) return;
-  audioContext ??= new (window.AudioContext ?? window.webkitAudioContext)();
+  audioContext ??= new (audioContextClass())();
   audioContext.resume().catch(() => {
     soundEnabled = false;
   });

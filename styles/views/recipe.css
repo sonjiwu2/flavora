@@ -43,11 +43,6 @@
   gap: var(--space-2);
 }
 
-.recipe__title {
-  overflow-wrap: break-word;
-  text-wrap: balance;
-}
-
 .recipe__summary {
   color: var(--color-text-muted);
   font-size: var(--text-heading);
@@ -55,17 +50,7 @@
 }
 
 .recipe__meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2) var(--space-5);
   margin-block-start: var(--space-2);
-}
-
-.recipe__meta-item {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-weight: 600;
 }
 
 .recipe__active-time {
@@ -74,15 +59,29 @@
 }
 
 .recipe__photo {
+  position: relative;
   grid-area: photo;
   overflow: hidden;
   max-width: 40rem;
   aspect-ratio: 3 / 2;
   border-radius: var(--radius-lg);
+}
+
+.recipe__photo::after {
+  content: '';
+  position: absolute;
+  inset: 0;
   background: var(--color-surface-muted);
+  pointer-events: none;
+  transition: opacity var(--duration-panel) var(--ease-out);
+}
+
+.recipe__photo--loaded::after {
+  opacity: 0;
 }
 
 .recipe__photo-image {
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -99,6 +98,44 @@
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-3);
+  animation: recipe-rise var(--duration-panel) var(--ease-out) var(--duration-fast) backwards;
+}
+
+@keyframes recipe-rise {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem);
+  }
+}
+
+.recipe__action {
+  min-height: var(--control-height);
+  padding: var(--space-1) var(--space-5);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text);
+  font-size: var(--text-body);
+  font-weight: 600;
+  line-height: var(--leading-heading);
+}
+
+.recipe__action[aria-pressed='true'] {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+@media (hover: hover) {
+  .recipe__action:hover {
+    border-color: var(--color-border-strong);
+    background: var(--color-hover);
+    color: var(--color-text);
+  }
+
+  .recipe__action[aria-pressed='true']:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
 }
 
 .ingredients {
@@ -107,6 +144,7 @@
   align-content: start;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--space-3);
+  animation: recipe-rise var(--duration-panel) var(--ease-out) var(--duration-base) backwards;
 }
 
 .ingredients__header {
@@ -127,6 +165,19 @@
   margin-inline-end: var(--space-2);
   font-weight: 600;
   white-space: nowrap;
+  transform-origin: 0 50%;
+}
+
+.servings__value.is-ticking,
+.ingredients__amount.is-ticking {
+  animation: amount-tick var(--duration-base) var(--ease-out);
+}
+
+@keyframes amount-tick {
+  from {
+    opacity: 0.35;
+    transform: scale(1.12);
+  }
 }
 
 .servings__button:disabled {
@@ -167,13 +218,15 @@
 
 .ingredients__amount {
   flex: none;
+  padding-inline-end: var(--space-1);
   font-weight: 600;
-  text-align: end;
   white-space: nowrap;
+  transform-origin: 100% 50%;
 }
 
 .recipe__steps {
   min-width: 0;
+  animation: recipe-rise var(--duration-panel) var(--ease-out) var(--duration-base) backwards;
 }
 
 .recipe__steps-header {
@@ -187,8 +240,20 @@
 }
 
 .recipe__steps-count {
+  padding-inline-end: var(--space-1);
   color: var(--color-text-muted);
   font-weight: 600;
+}
+
+.recipe__servings-note {
+  margin-block-start: var(--space-4);
+  padding: var(--space-2) var(--space-4);
+  border-inline-start: 3px solid var(--color-accent);
+  border-radius: var(--radius-sm);
+  background: var(--color-accent-soft);
+  font-size: var(--text-small);
+  font-weight: 600;
+  line-height: var(--leading-heading);
 }
 
 .steps {
@@ -197,10 +262,20 @@
 
 .step {
   display: grid;
+  align-items: baseline;
   grid-template-columns: auto minmax(0, 1fr);
   gap: var(--space-3) var(--space-4);
   padding-block: var(--space-5);
   border-block-end: 1px solid var(--color-border);
+  transition:
+    opacity var(--duration-panel) var(--ease-out),
+    transform var(--duration-panel) var(--ease-out);
+}
+
+.step--awaiting {
+  opacity: 0;
+  transform: translateY(1rem);
+  transition: none;
 }
 
 .step:last-child {
@@ -211,15 +286,13 @@
   min-width: 2ch;
   color: var(--color-accent);
   font-size: var(--text-title);
+  font-variant-numeric: tabular-nums;
   font-weight: 600;
-  line-height: 1;
+  line-height: var(--leading-heading);
 }
 
 .step__body {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  align-content: start;
-  gap: var(--space-2);
+  display: contents;
 }
 
 .step__title {
@@ -229,20 +302,27 @@
 }
 
 .step__text {
-  overflow-wrap: break-word;
+  grid-column: 1 / -1;
 }
 
 .step__figure {
-  grid-column: 2;
-  justify-self: start;
-  width: min(100%, 13rem);
+  grid-column: 1 / -1;
+  justify-self: center;
+  width: min(100%, 14rem);
   margin: 0;
 }
 
 .step__image {
+  display: block;
   width: 100%;
+  height: auto;
   aspect-ratio: 1;
   object-fit: contain;
+  transition: opacity var(--duration-panel) var(--ease-out);
+}
+
+.step__image--loading {
+  opacity: 0;
 }
 
 .step__note {
@@ -255,29 +335,70 @@
 
 .step-timer {
   display: grid;
+  grid-column: 1 / -1;
   grid-template-columns: minmax(0, 1fr);
   justify-items: start;
-  gap: var(--space-3);
 }
 
-.step-timer [hidden] {
-  display: none;
+.step-timer__toggle {
+  max-width: 100%;
+  margin-inline-start: calc(var(--space-3) * -1);
+  text-align: start;
 }
 
 .step-timer__badge {
   font-variant-numeric: tabular-nums;
 }
 
+.step-timer[data-status='done'] .step-timer__badge {
+  color: var(--color-success);
+}
+
+.step-timer__reveal {
+  display: grid;
+  grid-template-rows: 0fr;
+  width: 100%;
+  max-width: 24rem;
+  visibility: hidden;
+  transition:
+    grid-template-rows var(--duration-panel) var(--ease-out),
+    visibility 0s linear var(--duration-panel);
+}
+
+.step-timer[data-expanded='true'] .step-timer__reveal {
+  grid-template-rows: 1fr;
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+.step-timer__clip {
+  min-height: 0;
+  overflow: hidden;
+}
+
 .step-timer__panel {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--space-3);
-  width: 100%;
-  max-width: 24rem;
+  margin-block-start: var(--space-3);
   padding: var(--space-4);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-surface);
+  opacity: 0;
+  transform: translateY(-0.5rem);
+  transition:
+    opacity var(--duration-panel) var(--ease-out),
+    transform var(--duration-panel) var(--ease-out);
+}
+
+.step-timer[data-expanded='true'] .step-timer__panel {
+  opacity: 1;
+  transform: none;
+}
+
+.step-timer[data-status='done'] .step-timer__panel {
+  border-color: var(--color-success);
 }
 
 .step-timer__display {
@@ -298,6 +419,43 @@
   font-variant-numeric: tabular-nums;
   font-weight: 700;
   line-height: 1;
+  transform-origin: 0 50%;
+}
+
+.step-timer[data-status='done'] .step-timer__time {
+  animation: timer-done var(--duration-slow) var(--ease-out) 2;
+}
+
+@keyframes timer-done {
+  50% {
+    opacity: 0.6;
+    transform: scale(1.08);
+  }
+}
+
+.step-timer__progress {
+  overflow: hidden;
+  height: var(--space-1);
+  border-radius: var(--radius-pill);
+  background: var(--color-border);
+}
+
+.step-timer__progress-bar {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-accent);
+  transform: scaleX(var(--timer-progress, 0));
+  transform-origin: 0 50%;
+  transition: transform var(--duration-base) linear;
+}
+
+.step-timer[data-status='paused'] .step-timer__progress-bar {
+  opacity: 0.55;
+}
+
+.step-timer[data-status='done'] .step-timer__progress-bar {
+  background: var(--color-success);
 }
 
 .step-timer__state {
@@ -311,7 +469,6 @@
 }
 
 .step-timer__field {
-  display: grid;
   gap: var(--space-1);
   font-size: var(--text-small);
 }
@@ -347,9 +504,30 @@
   gap: var(--space-2);
 }
 
+@media (width < 30rem) {
+  .recipe__action {
+    flex: 1 1 auto;
+    padding-inline: var(--space-4);
+  }
+}
+
+@media print {
+  .step--awaiting {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 @container (width >= 34rem) {
   .step {
     grid-template-columns: auto minmax(0, 1fr) 11rem;
+  }
+
+  .step__body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-content: start;
+    gap: var(--space-2);
   }
 
   .step__figure {

@@ -1,4 +1,11 @@
 const MINUTES_IN_HOUR = 60;
+const NO_BREAK_SPACE = '\u00A0';
+const SPACE_AFTER_NUMBER = /(?<=\d) (?=[°\p{L}])/gu;
+const SPACE_INSIDE_SPOON_UNIT = /(?<=(?:ст|ч)\.) (?=л\.)/g;
+const SPACE_BEFORE_DASH = / (?=—)/g;
+const RANGE_DASH = /(?<=\d)–(?=\d)/g;
+const UNBREAKABLE_RANGE_DASH = '–\u2060';
+const SHORT_WORD_BEFORE_SPACE = /(?<![\p{L}\p{N}\u00A0°])(\p{L}{1,2}) (?=\S)/gu;
 
 export function pluralize(count, [one, few, many]) {
   const lastTwo = Math.abs(count) % 100;
@@ -21,6 +28,22 @@ export function formatDuration(totalMinutes, { long = false } = {}) {
 
 export function formatServings(count) {
   return `${count} ${pluralize(count, ['порция', 'порции', 'порций'])}`;
+}
+
+export function keepShortWordsAttached(text) {
+  return text.replace(SHORT_WORD_BEFORE_SPACE, `$1${NO_BREAK_SPACE}`);
+}
+
+export function keepNumbersWithUnits(text) {
+  return text
+    .replace(SPACE_AFTER_NUMBER, NO_BREAK_SPACE)
+    .replace(SPACE_INSIDE_SPOON_UNIT, NO_BREAK_SPACE)
+    .replace(SPACE_BEFORE_DASH, NO_BREAK_SPACE)
+    .replace(RANGE_DASH, UNBREAKABLE_RANGE_DASH);
+}
+
+export function typeset(text) {
+  return keepShortWordsAttached(keepNumbersWithUnits(text));
 }
 
 export function normalizeSearchText(text) {
