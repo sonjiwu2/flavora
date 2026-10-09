@@ -361,6 +361,13 @@
   transform: none;
 }
 
+.tabs--scroll {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+}
+
 .tabs--boxed {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 8rem), 1fr));
@@ -413,6 +420,10 @@
     background: var(--color-surface-muted);
     color: var(--color-text);
   }
+}
+
+.tabs--scroll .tabs__item:focus-visible {
+  outline-offset: -2px;
 }
 
 .choice-group {
