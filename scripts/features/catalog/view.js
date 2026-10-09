@@ -98,18 +98,6 @@ export function mount(outlet, route) {
     value: filters.query,
     className: 'catalog__search-field',
   });
-  const searchForm = el(
-    'form',
-    { class: 'catalog__search', role: 'search', novalidate: true },
-    search.element,
-    el(
-      'button',
-      { class: 'button catalog__submit', type: 'submit' },
-      el('span', { class: 'catalog__submit-label' }, TEXT.submit),
-      icon('arrow-right'),
-    ),
-  );
-
   const tabs = createCategoryTabs({
     label: TEXT.categories,
     selected: filters.category,
@@ -125,8 +113,20 @@ export function mount(outlet, route) {
       on: { click: openPanel },
     },
     icon('filters'),
-    TEXT.filters,
+    el('span', { class: 'catalog__action-label' }, TEXT.filters),
     filtersCount,
+  );
+  const searchForm = el(
+    'form',
+    { class: 'catalog__search', role: 'search', novalidate: true },
+    search.element,
+    el(
+      'button',
+      { class: 'button catalog__submit', type: 'submit' },
+      el('span', { class: 'catalog__action-label' }, TEXT.submit),
+      icon('arrow-right'),
+    ),
+    filtersButton,
   );
 
   const count = el('p', { class: 'result-count catalog__count', tabindex: '-1' });
@@ -302,12 +302,7 @@ export function mount(outlet, route) {
       { class: 'catalog' },
       el('h1', { class: 'page-title' }, TEXT.title),
       searchForm,
-      el(
-        'div',
-        { class: 'catalog__toolbar' },
-        tabs.element,
-        el('div', { class: 'catalog__quick' }, filtersButton),
-      ),
+      tabs.element,
       el('div', { class: 'catalog__status' }, count, sortControl.element, chipList),
       announcer.element,
       results,

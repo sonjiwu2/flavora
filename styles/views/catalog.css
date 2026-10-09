@@ -15,21 +15,9 @@
   min-width: 0;
 }
 
-.catalog__submit {
+.catalog__submit,
+.catalog__filters-button {
   flex: none;
-}
-
-.catalog__toolbar {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: start;
-  gap: var(--space-3) var(--space-5);
-}
-
-.catalog__quick {
-  display: flex;
-  gap: var(--space-2);
-  justify-self: end;
 }
 
 .catalog__filters-button {
@@ -267,12 +255,6 @@ legend.filters-panel__legend {
   }
 }
 
-@container recipe-list (width < 79rem) {
-  .catalog__toolbar {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
 @media (width < 40rem) {
   .catalog {
     gap: var(--space-4);
@@ -280,16 +262,6 @@ legend.filters-panel__legend {
 }
 
 @container recipe-list (width < 40rem) {
-  .catalog__quick {
-    flex-wrap: wrap;
-    justify-self: stretch;
-  }
-
-  .catalog__quick > .button {
-    flex: 1 1 auto;
-    min-width: 0;
-  }
-
   .catalog__status {
     gap: var(--space-2) var(--space-4);
   }
@@ -313,12 +285,13 @@ legend.filters-panel__legend {
 }
 
 @container recipe-list (width < 30rem) {
-  .catalog__submit {
-    min-width: var(--touch-target);
+  .catalog__submit,
+  .catalog__filters-button {
+    min-width: var(--control-height);
     padding-inline: 0;
   }
 
-  .catalog__submit-label {
+  .catalog__action-label {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -326,15 +299,16 @@ legend.filters-panel__legend {
     clip-path: inset(50%);
     white-space: nowrap;
   }
-
-  .catalog__quick > .button {
-    padding-inline: var(--space-3);
-  }
 }
 
 @container recipe-list (width < 20rem) {
-  .catalog__quick > .button {
-    padding-inline: var(--space-2);
+  .catalog__search-field {
+    gap: 0;
+    padding-inline: var(--space-3);
+  }
+
+  .catalog__search-field > .icon {
+    display: none;
   }
 }
 
