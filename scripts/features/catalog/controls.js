@@ -1,13 +1,11 @@
 import { icon } from '../../components/icons.js';
 import { CATEGORIES } from '../../data/categories.js';
 import { el, listen } from '../../utils/dom.js';
-import { findTidyRowWidth } from './tab-rows.js';
 
 const ANNOUNCE_DELAY_MS = 600;
 const CHIP_ICON_SIZE = 16;
 const SCROLL_EDGE_TOLERANCE = 2;
 const COMPACT_VIEWPORT_QUERY = '(max-width: 26rem)';
-const TIDY_WIDTH_PROPERTY = '--category-tabs-width';
 
 export function syncChildren(container, nodes) {
   const wanted = new Set(nodes);
@@ -167,7 +165,7 @@ export function createCategoryTabs({ label, selected = null, onSelect }) {
   );
   const list = el(
     'div',
-    { class: 'tabs category-tabs__list', role: 'group', 'aria-label': label },
+    { class: 'tabs tabs--scroll category-tabs__list', role: 'group', 'aria-label': label },
     buttons,
   );
   const element = el('div', { class: 'category-tabs' }, list);
@@ -179,9 +177,9 @@ export function createCategoryTabs({ label, selected = null, onSelect }) {
   }
 
   function revealButton(button) {
-    const edgeInset = buttons[0].offsetLeft;
-    const start = button.offsetLeft - edgeInset;
-    const end = button.offsetLeft + button.offsetWidth + edgeInset;
+    const peek = Number.parseFloat(window.getComputedStyle(list).scrollPaddingLeft) || 0;
+    const start = button.offsetLeft - peek;
+    const end = button.offsetLeft + button.offsetWidth + peek;
     if (start < list.scrollLeft) list.scrollLeft = start;
     else if (end > list.scrollLeft + list.clientWidth) list.scrollLeft = end - list.clientWidth;
   }
@@ -199,29 +197,9 @@ export function createCategoryTabs({ label, selected = null, onSelect }) {
     revealSelected();
   }
 
-  function tidyRows() {
-    const style = window.getComputedStyle(list);
-    const tidyWidth =
-      style.flexWrap === 'wrap'
-        ? findTidyRowWidth(
-            buttons.map((button) => button.getBoundingClientRect().width),
-            Number.parseFloat(style.columnGap) || 0,
-            element.clientWidth,
-          )
-        : null;
-    if (tidyWidth === null) element.style.removeProperty(TIDY_WIDTH_PROPERTY);
-    else element.style.setProperty(TIDY_WIDTH_PROPERTY, `${tidyWidth}px`);
-  }
-
-  function handleResize() {
-    tidyRows();
-    revealSelected();
-  }
-
   const stopScroll = listen(list, 'scroll', updateEdges, { passive: true });
-  const stopWindowResize = listen(window, 'resize', handleResize);
-  const observer = new ResizeObserver(handleResize);
-  buttons.forEach((button) => observer.observe(button));
+  const observer = new ResizeObserver(revealSelected);
+  [list, ...buttons].forEach((target) => observer.observe(target));
   setSelected(selected);
 
   return {
@@ -229,7 +207,6 @@ export function createCategoryTabs({ label, selected = null, onSelect }) {
     setSelected,
     dispose() {
       stopScroll();
-      stopWindowResize();
       observer.disconnect();
     },
   };
