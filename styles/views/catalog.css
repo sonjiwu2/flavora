@@ -1,10 +1,3 @@
-.catalog {
-  container: recipe-list / inline-size;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--space-5);
-}
-
 .catalog__search {
   display: flex;
   gap: var(--space-2);
@@ -15,45 +8,43 @@
   min-width: 0;
 }
 
-.catalog__submit {
+.catalog__submit,
+.catalog__filters-button {
   flex: none;
 }
 
-.catalog__toolbar {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: start;
-  gap: var(--space-3) var(--space-5);
-}
-
-.catalog__quick {
-  display: flex;
-  gap: var(--space-2);
-  justify-self: end;
-}
-
-.catalog__toggle[aria-pressed='true'],
-.filters-panel__option[aria-pressed='true'] {
-  border-color: var(--color-ink);
-  background: var(--color-ink);
-  color: var(--color-on-ink);
+.catalog__filters-button {
+  position: relative;
 }
 
 .catalog__filters-count {
+  position: absolute;
+  inset-block-start: calc(var(--space-2) * -1);
+  inset-inline-end: calc(var(--space-2) * -1);
   display: inline-grid;
   place-items: center;
   min-width: var(--space-5);
   min-height: var(--space-5);
   padding-inline: var(--space-1);
+  border: 2px solid var(--color-bg);
   border-radius: var(--radius-pill);
   background: var(--color-accent);
   color: var(--color-on-accent);
   font-size: var(--text-small);
   line-height: var(--leading-tight);
+  animation: catalog-pop var(--duration-base) var(--ease-spring);
 }
 
-.catalog__filters-count[hidden] {
-  display: none;
+.catalog__chips > .chip,
+.product-field__chips > .chip {
+  animation: catalog-pop var(--duration-base) var(--ease-spring);
+}
+
+@keyframes catalog-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
 }
 
 .catalog__status {
@@ -76,15 +67,8 @@
   min-width: 0;
 }
 
-.catalog__chips[hidden] {
-  display: none;
-}
-
-.catalog__results {
-  min-width: 0;
-}
-
 .filters-panel {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--space-6);
@@ -100,6 +84,23 @@
   border: 0;
 }
 
+.filters-panel > .filters-panel__group {
+  animation: recipe-list-soft-enter var(--duration-panel) var(--ease-out) backwards;
+  animation-delay: calc(var(--duration-fast) / 3 * var(--filters-group-order, 0));
+}
+
+.filters-panel__group:nth-child(2) {
+  --filters-group-order: 1;
+}
+
+.filters-panel__group:nth-child(3) {
+  --filters-group-order: 2;
+}
+
+.filters-panel__group:nth-child(4) {
+  --filters-group-order: 3;
+}
+
 .filters-panel__legend {
   padding: 0;
   font-size: var(--text-heading);
@@ -109,12 +110,6 @@
 
 legend.filters-panel__legend {
   margin-block-end: var(--space-3);
-}
-
-.filters-panel__options {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-2);
 }
 
 .filters-panel__hint {
@@ -128,16 +123,10 @@ legend.filters-panel__legend {
   gap: var(--space-1);
 }
 
-.filters-panel__switch-control[data-disabled] {
-  opacity: 0.6;
-}
-
 .filters-panel__footer {
   display: grid;
-  flex: 1;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--space-2);
-  width: 100%;
 }
 
 .filters-panel__preview {
@@ -164,7 +153,7 @@ legend.filters-panel__legend {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--space-1);
-  scroll-margin-block: var(--space-4);
+  scroll-margin-block: var(--space-2);
 }
 
 .product-field__options {
@@ -180,9 +169,19 @@ legend.filters-panel__legend {
   background: var(--color-surface);
 }
 
-.product-field__options[hidden],
-.product-field__chips[hidden] {
-  display: none;
+.product-field__options,
+.product-field__empty,
+.product-field__more,
+.product-field__pending {
+  transform-origin: top center;
+  animation: product-options-enter var(--duration-base) var(--ease-out);
+}
+
+@keyframes product-options-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-0.25rem) scaleY(0.97);
+  }
 }
 
 .product-field__option {
@@ -208,6 +207,23 @@ legend.filters-panel__legend {
   color: var(--color-text-muted);
 }
 
+.product-field__more {
+  padding-inline: var(--space-3);
+  color: var(--color-text-muted);
+  font-size: var(--text-small);
+  line-height: var(--leading-heading);
+}
+
+.product-field__pending {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-error);
+  border-radius: var(--radius-md);
+  color: var(--color-error);
+  font-size: var(--text-small);
+  font-weight: 600;
+  line-height: var(--leading-heading);
+}
+
 .product-field__chips {
   display: flex;
   flex-wrap: wrap;
@@ -224,31 +240,37 @@ legend.filters-panel__legend {
   }
 }
 
-@container recipe-list (width < 56rem) {
-  .catalog__toolbar {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
 @container recipe-list (width < 40rem) {
-  .catalog__quick {
-    flex-wrap: wrap;
-    justify-self: stretch;
+  .catalog__status {
+    gap: var(--space-2) var(--space-4);
   }
 
-  .catalog__quick > .button {
-    flex: 1 1 auto;
-    min-width: 0;
+  .catalog__chips {
+    flex-wrap: nowrap;
+    margin: calc(var(--space-2) * -1);
+    padding: var(--space-2);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+
+  .catalog__chips > * {
+    flex: none;
+  }
+
+  .catalog__chips > .chip {
+    max-width: none;
   }
 }
 
 @container recipe-list (width < 30rem) {
-  .catalog__submit {
-    min-width: var(--touch-target);
+  .catalog__submit,
+  .catalog__filters-button {
+    min-width: var(--control-height);
     padding-inline: 0;
   }
 
-  .catalog__submit-label {
+  .catalog__action-label {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -256,35 +278,20 @@ legend.filters-panel__legend {
     clip-path: inset(50%);
     white-space: nowrap;
   }
-
-  .catalog__quick > .button {
-    padding-inline: var(--space-3);
-  }
-
-  .catalog__sort {
-    flex: 1 1 100%;
-  }
 }
 
 @container recipe-list (width < 20rem) {
-  .catalog__quick > .button {
-    padding-inline: var(--space-2);
+  .catalog__search-field {
+    gap: 0;
+    padding-inline: var(--space-3);
   }
 
-  .catalog__toggle > .icon {
+  .catalog__search-field > .icon {
     display: none;
   }
 }
 
 @media (forced-colors: active) {
-  .catalog__toggle[aria-pressed='true'],
-  .filters-panel__option[aria-pressed='true'] {
-    border-color: Highlight;
-    background: Highlight;
-    color: HighlightText;
-    forced-color-adjust: none;
-  }
-
   .product-field__option[aria-selected='true'] {
     outline: 2px solid Highlight;
     outline-offset: -2px;
