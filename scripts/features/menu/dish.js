@@ -5,12 +5,14 @@ import { el } from '../../utils/dom.js';
 import { formatDuration } from '../../utils/format.js';
 
 const CLOCK_ICON_SIZE = 20;
+const CELL_THUMB_SIZES = '(min-width: 75rem) 13vw, 6rem';
+const OPTION_THUMB_SIZES = '5.5rem';
 
 function joinClasses(...names) {
   return names.filter(Boolean).join(' ');
 }
 
-function createDishImage(recipe) {
+function createDishImage(recipe, sizes) {
   const source = dishImage(recipe.id);
   const image = el('img', {
     class: 'menu-thumb__image',
@@ -18,6 +20,8 @@ function createDishImage(recipe) {
     decoding: 'async',
     width: source.width,
     height: source.height,
+    sizes,
+    srcset: source.srcset,
     alt: '',
   });
   image.addEventListener('error', () => image.remove(), { once: true });
@@ -26,7 +30,11 @@ function createDishImage(recipe) {
 }
 
 export function createDishThumb(recipe, className) {
-  return el('span', { class: joinClasses('menu-thumb', className) }, createDishImage(recipe));
+  return el(
+    'span',
+    { class: joinClasses('menu-thumb', className) },
+    createDishImage(recipe, OPTION_THUMB_SIZES),
+  );
 }
 
 export function createDishThumbLink(recipe, className) {
@@ -38,7 +46,7 @@ export function createDishThumbLink(recipe, className) {
       tabindex: '-1',
       'aria-hidden': 'true',
     },
-    createDishImage(recipe),
+    createDishImage(recipe, CELL_THUMB_SIZES),
   );
 }
 

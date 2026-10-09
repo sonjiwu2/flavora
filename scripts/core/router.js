@@ -58,10 +58,14 @@ export function createRouter({ routes, fallback, outlet, onChange }) {
 
     if (typeof dispose === 'function') dispose();
     dispose = null;
+    const focusWasInside = outlet.contains(document.activeElement);
     outlet.replaceChildren();
     const context = { name: matched.route.name, path, params: matched.params, query };
     dispose = module.mount(outlet, context) ?? null;
     onChange?.(context);
+    if (focusWasInside && document.activeElement === document.body) {
+      outlet.focus({ preventScroll: true });
+    }
   }
 
   function start() {

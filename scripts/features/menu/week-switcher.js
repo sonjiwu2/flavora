@@ -1,6 +1,7 @@
 import { icon } from '../../components/icons.js';
 import { getWeekRangeParts, parseIsoDate } from '../../utils/dates.js';
 import { el } from '../../utils/dom.js';
+import { playEnter } from './motion.js';
 import { shiftWeek } from './planner.js';
 
 function createStepButton(label, iconName, onClick) {
@@ -35,9 +36,11 @@ export function createWeekSwitcher({ weekStart, onChange }) {
   }
 
   function shift(amount) {
+    const direction = amount > 0 ? 'forward' : 'backward';
     current = shiftWeek(current, amount);
     render();
-    onChange(current);
+    playEnter(label, direction);
+    onChange(current, direction);
   }
 
   render();

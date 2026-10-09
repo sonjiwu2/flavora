@@ -3,6 +3,7 @@ import { MEALS, getMeal } from '../../core/store.js';
 import { getRecipe } from '../../data/recipes.js';
 import { formatDayLong, formatWeekdayShort, parseIsoDate } from '../../utils/dates.js';
 import { el } from '../../utils/dom.js';
+import { playEnter } from './motion.js';
 import { MEAL_OPTIONS, getWeekDates } from './planner.js';
 
 let pickerCount = 0;
@@ -57,6 +58,7 @@ export function createSlotPicker({ weekStart, today, selected, onChange }) {
   function selectDate(date) {
     state.date = date;
     renderMeals();
+    playEnter(mealList, 'fade');
     onChange(getSlot());
   }
 
@@ -70,9 +72,9 @@ export function createSlotPicker({ weekStart, today, selected, onChange }) {
     const isToday = date === today;
     return el(
       'label',
-      { class: isToday ? 'slot-day slot-day--today' : 'slot-day' },
+      { class: isToday ? 'choice slot-day slot-day--today' : 'choice slot-day' },
       el('input', {
-        class: 'slot-day__input visually-hidden',
+        class: 'choice__input',
         type: 'radio',
         name: dayGroupName,
         value: date,
@@ -82,7 +84,7 @@ export function createSlotPicker({ weekStart, today, selected, onChange }) {
       }),
       el(
         'span',
-        { class: 'slot-day__face' },
+        { class: 'choice__label slot-day__face' },
         el(
           'span',
           { class: 'slot-day__weekday', 'aria-hidden': 'true' },
@@ -98,9 +100,9 @@ export function createSlotPicker({ weekStart, today, selected, onChange }) {
   function createMealOption(option) {
     return el(
       'label',
-      { class: 'slot-meal' },
+      { class: 'choice slot-meal' },
       el('input', {
-        class: 'slot-meal__input visually-hidden',
+        class: 'choice__input',
         type: 'radio',
         name: mealGroupName,
         value: option.id,
@@ -109,8 +111,7 @@ export function createSlotPicker({ weekStart, today, selected, onChange }) {
       }),
       el(
         'span',
-        { class: 'slot-meal__face' },
-        el('span', { class: 'slot-meal__check', 'aria-hidden': 'true' }),
+        { class: 'choice__label slot-meal__face' },
         icon(option.icon),
         el('span', { class: 'slot-meal__label' }, option.label),
         createMealState(state.date, option.id),
@@ -132,6 +133,7 @@ export function createSlotPicker({ weekStart, today, selected, onChange }) {
     state.date = getWeekDates(nextWeekStart)[dayIndex];
     renderDays();
     renderMeals();
+    playEnter(dayList, 'fade');
     onChange(getSlot());
   }
 
@@ -142,14 +144,14 @@ export function createSlotPicker({ weekStart, today, selected, onChange }) {
     { class: 'slot-picker' },
     el(
       'fieldset',
-      { class: 'slot-picker__group' },
-      el('legend', { class: 'slot-picker__legend' }, 'День'),
+      { class: 'choice-group' },
+      el('legend', { class: 'choice-group__legend' }, 'День'),
       dayList,
     ),
     el(
       'fieldset',
-      { class: 'slot-picker__group' },
-      el('legend', { class: 'slot-picker__legend' }, 'Приём пищи'),
+      { class: 'choice-group' },
+      el('legend', { class: 'choice-group__legend' }, 'Приём пищи'),
       mealList,
     ),
   );
