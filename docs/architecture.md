@@ -106,6 +106,8 @@
 
 Пути вычисляет `scripts/data/media.js`:
 
+Обложки блюд готовит `tools/build-dish-covers.mjs` по соответствию `tools/dish-covers.json`.
+
 - `dishImage(id)` → `{ src, srcset, width, height }` для `assets/dishes/<id>-480.webp` и
   `assets/dishes/<id>-960.webp`, соотношение сторон 3:2;
 - `stepImage(id, n)` → `{ src, width, height }` для `assets/steps/<id>-step-0N.webp`: квадратный
@@ -138,19 +140,19 @@ API: `subscribe(listener)` (слушатель получает `{ type }`, гд
 
 ## Общие модули
 
-| Модуль                                  | Назначение                                                                       |
-| --------------------------------------- | -------------------------------------------------------------------------------- |
-| `scripts/utils/dom.js`                  | `el()`, `listen()`, `createDisposer()`; текст только через узлы                  |
-| `scripts/utils/format.js`               | Русские множественные формы, длительность, порции, поиск                         |
-| `scripts/utils/dates.js`                | Локальные календарные даты, недели с понедельника, подписи                       |
-| `scripts/components/icons.js`           | `icon(name, { size, filled })` — встроенные SVG                                  |
-| `scripts/components/modal.js`           | `openDialog({ title, body, footer, variant, onClose })`, `closeAllDialogs()`     |
-| `scripts/components/toast.js`           | `showToast(message, { duration, action })` — уведомление в live-region           |
-| `scripts/components/favorite-button.js` | `createFavoriteButton(recipe, { withLabel, announce })` → `{ element, dispose }` |
-| `scripts/components/recipe-card.js`     | `createRecipeCard(recipe, options)` → `{ element, dispose, setMatchLabel }`      |
-| `scripts/features/recipe/timers.js`     | Таймеры шагов: отсчёт по метке времени, один общий интервал                      |
-| `scripts/features/menu/add-to-menu.js`  | `openAddToMenu(recipeId)` → `{ element, close }` или `null`                      |
-| `scripts/features/shell/*`              | Шапка, тема, движение, настройки, смена экрана, сбой сохранения                  |
+| Модуль                                  | Назначение                                                                              |
+| --------------------------------------- | --------------------------------------------------------------------------------------- |
+| `scripts/utils/dom.js`                  | `el()`, `listen()`, `createDisposer()`; текст только через узлы                         |
+| `scripts/utils/format.js`               | Русские множественные формы, длительность, порции, поиск                                |
+| `scripts/utils/dates.js`                | Локальные календарные даты, недели с понедельника, подписи                              |
+| `scripts/components/icons.js`           | `icon(name, { size, filled })` — встроенные SVG                                         |
+| `scripts/components/modal.js`           | `openDialog({ title, body, footer, variant, onClose })`, `closeAllDialogs()`            |
+| `scripts/components/toast.js`           | `showToast(message, { duration, action })` — уведомление в live-region                  |
+| `scripts/components/favorite-button.js` | `createFavoriteButton(recipe, { withLabel, announce })` → `{ element, dispose }`        |
+| `scripts/components/recipe-card.js`     | `createRecipeCard(recipe, { eager, priority })` → `{ element, dispose, setMatchLabel }` |
+| `scripts/features/recipe/timers.js`     | Таймеры шагов: отсчёт по метке времени, один общий интервал                             |
+| `scripts/features/menu/add-to-menu.js`  | `openAddToMenu(recipeId)` → `{ element, close }` или `null`                             |
+| `scripts/features/shell/*`              | Шапка, тема, движение, настройки, смена экрана, сбой сохранения                         |
 
 `action` уведомления — `{ label, href }` (ссылка) или `{ label, onSelect }` (кнопка). Диалог
 `variant: 'side'` — панель справа на широком экране и нижний лист на телефоне; открытые диалоги
