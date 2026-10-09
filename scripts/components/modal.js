@@ -1,8 +1,8 @@
 import { el } from '../utils/dom.js';
 import { icon } from './icons.js';
-import { moveToastRegion } from './toast.js';
+import { moveToastRegion, removeAfterExit } from './toast.js';
 
-const VARIANTS = ['center', 'side'];
+const VARIANTS = ['center', 'side', 'sheet'];
 const TRIGGER_SELECTOR = 'button, a[href], input, select, textarea, summary, [tabindex]';
 const TRIGGER_MEMORY_MS = 1000;
 const openDialogs = [];
@@ -57,6 +57,16 @@ function restoreFocus(opener) {
   if (opener instanceof HTMLElement && opener.isConnected && hasLostFocus()) opener.focus();
 }
 
+function releaseFocus(dialog) {
+  const focused = document.activeElement;
+  if (focused instanceof HTMLElement && dialog.contains(focused)) focused.blur();
+}
+
+function leave(dialog) {
+  if (openDialogs.length > 0) dialog.remove();
+  else removeAfterExit(dialog);
+}
+
 function forget(dialog) {
   const index = openDialogs.indexOf(dialog);
   if (index !== -1) openDialogs.splice(index, 1);
@@ -105,7 +115,8 @@ export function openDialog({ title, body, footer = null, variant = 'center', onC
   dialog.addEventListener('close', () => {
     forget(dialog);
     moveToastRegion(openDialogs.at(-1) ?? document.body);
-    dialog.remove();
+    releaseFocus(dialog);
+    leave(dialog);
     if (openDialogs.length === 0) unlockPageScroll();
     restoreFocus(opener);
     onClose?.();

@@ -1,11 +1,12 @@
 import { icon } from '../../components/icons.js';
-import { createRecipeCard } from '../../components/recipe-card.js';
-import { buildHref, setPageTitle } from '../../core/router.js';
+import { buildHref, setPageTitle, updateAddress } from '../../core/router.js';
 import { recipes } from '../../data/recipes.js';
 import { createDisposer, el, listen } from '../../utils/dom.js';
 import {
+  createCardPool,
   createCategoryTabs,
-  createChip,
+  createEmptyState,
+  createKeyedChips,
   createResultAnnouncer,
   createSearchField,
   createSortControl,
@@ -14,26 +15,21 @@ import {
 } from './controls.js';
 import { selectRecipes } from './filter-recipes.js';
 import {
-  QUICK_TIME_LIMIT,
   countPanelFilters,
   createDefaultFilters,
   describeActiveFilters,
   formatFoundCount,
   formatPantryMatch,
-  formatTimeLimit,
   normalizeFilters,
   parseFilters,
   resetFilters,
   serializeFilters,
-  toggleQuickTime,
 } from './filter-state.js';
 import { openFiltersPanel } from './filters-panel.js';
-import { rememberScroll } from './scroll-memory.js';
+import { captureLayout, refreshSoftly, settleFromLayout } from './motion.js';
 
 const ROUTE_PATH = '/recipes';
-const EAGER_CARD_COUNT = 3;
 const ADDRESS_DELAY_MS = 300;
-const SCROLL_STATE_KEY = 'catalogScroll';
 
 const TEXT = Object.freeze({
   title: 'Рецепты',
@@ -57,6 +53,14 @@ const TEXT = Object.freeze({
 });
 
 let savedFilters = createDefaultFilters();
+let leavingCatalog = false;
+
+function noteCatalogExit() {
+  leavingCatalog = true;
+  queueMicrotask(() => {
+    leavingCatalog = false;
+  });
+}
 
 function sortOptions(filters) {
   return [
@@ -71,17 +75,19 @@ function sortOptions(filters) {
 }
 
 function readInitialFilters(route) {
-  return Object.keys(route.query ?? {}).length > 0 ? parseFilters(route.query) : savedFilters;
+  if (Object.keys(route.query ?? {}).length > 0) return parseFilters(route.query);
+  return leavingCatalog ? resetFilters(savedFilters) : savedFilters;
 }
 
 export function mount(outlet, route) {
   const disposer = createDisposer();
-  const cards = new Map();
+  const cards = createCardPool();
   const coarsePointer = window.matchMedia('(pointer: coarse)');
-  const scrollMemory = rememberScroll(SCROLL_STATE_KEY);
+  const reopenedFromCatalog = leavingCatalog;
   let filters = readInitialFilters(route);
   let panel = null;
   let addressTimer = null;
+  let shownSignature = null;
 
   setPageTitle(TEXT.title);
 
@@ -92,33 +98,11 @@ export function mount(outlet, route) {
     value: filters.query,
     className: 'catalog__search-field',
   });
-  const searchForm = el(
-    'form',
-    { class: 'catalog__search', role: 'search', novalidate: true },
-    search.element,
-    el(
-      'button',
-      { class: 'button catalog__submit', type: 'submit' },
-      el('span', { class: 'catalog__submit-label' }, TEXT.submit),
-      icon('arrow-right'),
-    ),
-  );
-
   const tabs = createCategoryTabs({
     label: TEXT.categories,
     selected: filters.category,
     onSelect: (category) => apply({ ...filters, category }),
   });
-  const quickTime = el(
-    'button',
-    {
-      class: 'button button--secondary catalog__toggle',
-      type: 'button',
-      on: { click: () => apply(toggleQuickTime(filters)) },
-    },
-    icon('clock'),
-    formatTimeLimit(QUICK_TIME_LIMIT),
-  );
   const filtersCount = el('span', { class: 'catalog__filters-count', hidden: true });
   const filtersButton = el(
     'button',
@@ -129,8 +113,20 @@ export function mount(outlet, route) {
       on: { click: openPanel },
     },
     icon('filters'),
-    TEXT.filters,
+    el('span', { class: 'catalog__action-label' }, TEXT.filters),
     filtersCount,
+  );
+  const searchForm = el(
+    'form',
+    { class: 'catalog__search', role: 'search', novalidate: true },
+    search.element,
+    el(
+      'button',
+      { class: 'button catalog__submit', type: 'submit' },
+      el('span', { class: 'catalog__action-label' }, TEXT.submit),
+      icon('arrow-right'),
+    ),
+    filtersButton,
   );
 
   const count = el('p', { class: 'result-count catalog__count', tabindex: '-1' });
@@ -140,7 +136,6 @@ export function mount(outlet, route) {
     options: sortOptions(filters),
     value: filters.sort,
     onChange: (sort) => apply({ ...filters, sort }),
-    className: 'catalog__sort',
   });
   const chipList = el('ul', {
     class: 'catalog__chips',
@@ -149,7 +144,7 @@ export function mount(outlet, route) {
   });
   const resetItem = el(
     'li',
-    { class: 'catalog__reset' },
+    {},
     el(
       'button',
       { class: 'button button--quiet button--small', type: 'button', on: { click: resetAll } },
@@ -157,15 +152,20 @@ export function mount(outlet, route) {
     ),
   );
 
-  const grid = el('div', { class: 'recipe-grid' });
-  const emptyState = el(
-    'div',
-    { class: 'empty-state' },
-    el('h2', { class: 'empty-state__title' }, TEXT.emptyTitle),
-    el('p', { class: 'empty-state__text' }, TEXT.emptyText),
+  const grid = el('div', { class: 'recipe-grid', dataset: { entering: '' } });
+  const emptyState = createEmptyState(
+    TEXT.emptyTitle,
+    TEXT.emptyText,
     el('button', { class: 'button', type: 'button', on: { click: resetAll } }, TEXT.emptyAction),
   );
-  const results = el('div', { class: 'catalog__results' });
+  const results = el('div', { class: 'recipe-list__results' });
+  const syncChips = createKeyedChips({
+    describe: (filter) => ({
+      label: filter.label,
+      removeLabel: TEXT.removeFilterPrefix + filter.label,
+    }),
+    onRemove: removeFilter,
+  });
 
   function cancelAddressTimer() {
     if (addressTimer !== null) window.clearTimeout(addressTimer);
@@ -174,11 +174,12 @@ export function mount(outlet, route) {
 
   function writeAddress() {
     cancelAddressTimer();
-    const href = buildHref(ROUTE_PATH, serializeFilters(filters));
+    const query = serializeFilters(filters);
+    const href = buildHref(ROUTE_PATH, query);
     const currentHash = window.location.hash;
     if (currentHash === href) return;
     if (!href.includes('?') && !currentHash.includes('?')) return;
-    window.history.replaceState(window.history.state, '', href);
+    updateAddress(ROUTE_PATH, query, { replace: true });
   }
 
   function scheduleAddress() {
@@ -191,35 +192,28 @@ export function mount(outlet, route) {
   }
 
   function cardFor(entry) {
-    let card = cards.get(entry.recipe.id);
-    if (!card) {
-      card = createRecipeCard(entry.recipe, {
-        eager: cards.size < EAGER_CARD_COUNT,
-        priority: cards.size === 0,
-      });
-      cards.set(entry.recipe.id, card);
-      disposer.add(card.dispose);
-    }
+    const card = cards.take(entry.recipe);
     card.setMatchLabel(entry.pantry ? formatPantryMatch(entry.pantry) : null);
     return card.element;
   }
 
   function renderResults(entries) {
+    const signature = entries.map((entry) => entry.recipe.id).join(' ');
+    const isChanged = shownSignature !== null && shownSignature !== signature;
+    shownSignature = signature;
+    if (isChanged) delete grid.dataset.entering;
     syncChildren(grid, entries.map(cardFor));
     const content = entries.length > 0 ? grid : emptyState;
     if (results.firstChild !== content) results.replaceChildren(content);
+    if (isChanged) refreshSoftly(results);
   }
 
   function renderActiveFilters() {
-    const active = describeActiveFilters(filters);
-    const chips = active.map((filter, index) =>
-      createChip(filter.label, {
-        removeLabel: `${TEXT.removeFilterPrefix}${filter.label}`,
-        onRemove: () => removeFilter(filter, index),
-      }),
-    );
-    chipList.replaceChildren(...chips.map((chip) => chip.element), resetItem);
-    chipList.hidden = active.length === 0;
+    const previousLayout = captureLayout(chipList.children);
+    const chips = syncChips(describeActiveFilters(filters));
+    syncChildren(chipList, [...chips.map((chip) => chip.element), resetItem]);
+    chipList.hidden = chips.length === 0;
+    settleFromLayout(previousLayout, chipList.children);
   }
 
   function renderFiltersCount() {
@@ -235,7 +229,6 @@ export function mount(outlet, route) {
     const entries = selectRecipes(recipes, filters);
     if (search.input.value !== filters.query) search.input.value = filters.query;
     tabs.setSelected(filters.category);
-    quickTime.setAttribute('aria-pressed', String(filters.maxMinutes === QUICK_TIME_LIMIT));
     renderFiltersCount();
     sortControl.update(sortOptions(filters), filters.sort);
     count.textContent = formatFoundCount(entries.length);
@@ -257,8 +250,11 @@ export function mount(outlet, route) {
     count.focus();
   }
 
-  function removeFilter(filter, index) {
-    apply(filter.remove(filters));
+  function removeFilter(key) {
+    const active = describeActiveFilters(filters);
+    const index = active.findIndex((filter) => filter.key === key);
+    if (index === -1) return;
+    apply(active[index].remove(filters));
     focusAfterRemoval([...chipList.querySelectorAll('.chip__remove')], index, count);
   }
 
@@ -277,8 +273,8 @@ export function mount(outlet, route) {
     if (coarsePointer.matches) search.input.blur();
   }
 
-  disposer.add(scrollMemory.dispose);
-  disposer.add(listen(grid, 'click', scrollMemory.save, { capture: true }));
+  disposer.add(noteCatalogExit);
+  disposer.add(cards.dispose);
   disposer.add(search.dispose);
   disposer.add(tabs.dispose);
   disposer.add(announcer.dispose);
@@ -295,15 +291,10 @@ export function mount(outlet, route) {
   outlet.append(
     el(
       'div',
-      { class: 'catalog' },
+      { class: 'recipe-list' },
       el('h1', { class: 'page-title' }, TEXT.title),
       searchForm,
-      el(
-        'div',
-        { class: 'catalog__toolbar' },
-        tabs.element,
-        el('div', { class: 'catalog__quick' }, quickTime, filtersButton),
-      ),
+      tabs.element,
       el('div', { class: 'catalog__status' }, count, sortControl.element, chipList),
       announcer.element,
       results,
@@ -313,6 +304,6 @@ export function mount(outlet, route) {
   savedFilters = filters;
   render();
   writeAddress();
-  scrollMemory.restore();
+  if (reopenedFromCatalog) window.scrollTo(0, 0);
   return disposer.dispose;
 }

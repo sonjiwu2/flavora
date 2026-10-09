@@ -43,3 +43,15 @@ export function toChoice(storedValue) {
 export function fromChoice(choice) {
   return choice === SYSTEM_CHOICE ? null : choice;
 }
+
+export function spillDirection(theme) {
+  return theme === 'dark' ? 'out' : 'in';
+}
+
+export function spillGeometry(originBox, viewport) {
+  const x = Math.round(originBox.left + originBox.width / 2);
+  const y = Math.round(originBox.top + originBox.height / 2);
+  const farthestX = Math.max(x, viewport.width - x);
+  const farthestY = Math.max(y, viewport.height - y);
+  return { x, y, radius: Math.ceil(Math.hypot(farthestX, farthestY)) };
+}

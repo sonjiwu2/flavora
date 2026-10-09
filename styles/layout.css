@@ -50,6 +50,12 @@
   font-weight: 400;
   line-height: var(--leading-tight);
   text-decoration: none;
+  transition: transform var(--duration-base) var(--ease-spring);
+}
+
+.site-logo:active {
+  transform: scale(var(--press-scale));
+  transition: transform var(--duration-fast) var(--ease-out);
 }
 
 .site-nav {
@@ -76,6 +82,7 @@
   font-weight: 600;
   text-decoration: none;
   white-space: nowrap;
+  transition: transform var(--duration-base) var(--ease-spring);
 }
 
 .site-nav__link::after {
@@ -116,6 +123,8 @@
 
 .site-nav__link:active {
   color: var(--color-accent);
+  transform: scale(var(--press-scale-small));
+  transition: transform var(--duration-fast) var(--ease-out);
 }
 
 .site-nav__link:not([aria-current='page']):active::after {
@@ -137,13 +146,31 @@
   opacity: 0.6;
 }
 
-.theme-toggle__icon--moon,
+.theme-toggle__icon--sun,
+.theme-toggle__icon--moon {
+  grid-area: 1 / 1;
+  transition:
+    opacity calc(var(--duration-slow) / 2) var(--ease-out),
+    transform var(--duration-slow) var(--ease-spring);
+}
+
+.theme-toggle__icon--moon {
+  opacity: 0;
+  transform: rotate(-90deg) scale(0.4);
+}
+
 :root[data-theme='dark'] .theme-toggle__icon--sun {
-  display: none;
+  opacity: 0;
+  transform: rotate(90deg) scale(0.4);
 }
 
 :root[data-theme='dark'] .theme-toggle__icon--moon {
-  display: block;
+  opacity: 1;
+  transform: none;
+}
+
+:root[data-theme-spill='in'] .theme-toggle__icon--sun {
+  transition-delay: calc(var(--duration-slow) * 0.7);
 }
 
 .site-main {
@@ -155,13 +182,12 @@
 }
 
 .site-main[data-entering] {
-  animation: screen-enter var(--duration-panel) var(--ease-out);
+  animation: screen-enter var(--duration-base) var(--ease-out);
 }
 
 @keyframes screen-enter {
   from {
     opacity: 0;
-    transform: translateY(0.5rem);
   }
 }
 
@@ -177,13 +203,13 @@
   color: var(--color-text-muted);
 }
 
-@media (width >= 48rem) {
+@media (width >= 40rem) {
   .site-header__inner {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     grid-template-areas: 'logo nav tools';
-    gap: var(--space-5);
-    padding-block: var(--space-3);
+    gap: var(--space-4);
+    padding-block: var(--space-2);
   }
 
   .site-logo {
@@ -193,6 +219,21 @@
   .site-nav__list {
     flex-wrap: nowrap;
     justify-content: center;
+    gap: var(--space-5);
+  }
+
+  .site-header__tools {
+    justify-self: end;
+  }
+}
+
+@media (width >= 48rem) {
+  .site-header__inner {
+    gap: var(--space-5);
+    padding-block: var(--space-3);
+  }
+
+  .site-nav__list {
     gap: var(--space-6);
   }
 
@@ -201,7 +242,6 @@
   }
 
   .site-header__tools {
-    justify-self: end;
     gap: var(--space-3);
   }
 

@@ -1,13 +1,13 @@
 import { icon } from '../../components/icons.js';
+import { createRecipeCard } from '../../components/recipe-card.js';
 import { CATEGORIES } from '../../data/categories.js';
 import { el, listen } from '../../utils/dom.js';
-import { findBalancedRowWidth } from './wrap-balance.js';
 
 const ANNOUNCE_DELAY_MS = 600;
 const CHIP_ICON_SIZE = 16;
+const EAGER_CARD_COUNT = 3;
 const SCROLL_EDGE_TOLERANCE = 2;
 const COMPACT_VIEWPORT_QUERY = '(max-width: 26rem)';
-const BALANCED_WIDTH_PROPERTY = '--category-tabs-width';
 
 export function syncChildren(container, nodes) {
   const wanted = new Set(nodes);
@@ -20,19 +20,83 @@ export function syncChildren(container, nodes) {
   });
 }
 
-export function createChip(label, { removeLabel, onRemove, tagName = 'li' }) {
+export function createCardPool() {
+  const cards = new Map();
+
+  function take(recipe) {
+    let card = cards.get(recipe.id);
+    if (!card) {
+      card = createRecipeCard(recipe, {
+        eager: cards.size < EAGER_CARD_COUNT,
+        priority: cards.size === 0,
+      });
+      cards.set(recipe.id, card);
+    }
+    return card;
+  }
+
+  function prune(keptIds) {
+    const removed = [];
+    for (const [recipeId, card] of cards) {
+      if (keptIds.has(recipeId)) continue;
+      card.dispose();
+      cards.delete(recipeId);
+      removed.push(card.element);
+    }
+    return removed;
+  }
+
+  return { take, prune, dispose: () => prune(new Set()) };
+}
+
+export function createEmptyState(title, text, ...actions) {
+  return el(
+    'div',
+    { class: 'empty-state' },
+    el('h2', { class: 'empty-state__title' }, title),
+    el('p', { class: 'empty-state__text' }, text),
+    actions,
+  );
+}
+
+function createChip(label, { removeLabel, onRemove }) {
+  const text = el('span', { class: 'chip__text' }, label);
   const removeButton = el(
     'button',
     { class: 'chip__remove', type: 'button', 'aria-label': removeLabel, on: { click: onRemove } },
     icon('close', { size: CHIP_ICON_SIZE }),
   );
-  const element = el(
-    tagName,
-    { class: 'chip' },
-    el('span', { class: 'chip__text' }, label),
-    removeButton,
-  );
-  return { element, removeButton };
+  const element = el('li', { class: 'chip' }, text, removeButton);
+
+  function setLabel(nextLabel, nextRemoveLabel) {
+    if (text.textContent !== nextLabel) text.textContent = nextLabel;
+    removeButton.setAttribute('aria-label', nextRemoveLabel);
+  }
+
+  return { element, setLabel };
+}
+
+export function createKeyedChips({ describe, onRemove }) {
+  const chips = new Map();
+
+  function chipFor(item) {
+    const { label, removeLabel } = describe(item);
+    let chip = chips.get(item.key);
+    if (chip) chip.setLabel(label, removeLabel);
+    else {
+      chip = createChip(label, { removeLabel, onRemove: () => onRemove(item.key) });
+      chips.set(item.key, chip);
+    }
+    return chip;
+  }
+
+  return function sync(items) {
+    const wanted = new Set(items.map((item) => item.key));
+    for (const key of [...chips.keys()]) {
+      if (!wanted.has(key)) chips.delete(key);
+    }
+    return items.map(chipFor);
+  };
 }
 
 export function focusAfterRemoval(removeButtons, removedIndex, fallback) {
@@ -100,7 +164,7 @@ export function createSortControl({ label, options, value, onChange, className =
   }
 
   update(options, value);
-  return { element, select, update };
+  return { element, update };
 }
 
 export function createResultAnnouncer() {
@@ -127,7 +191,7 @@ export function createResultAnnouncer() {
   return { element, announce, dispose: cancel };
 }
 
-export function createCategoryTabs({ label, selected = null, onSelect }) {
+export function createCategoryTabs({ label, selected = null, onSelect, className = '' }) {
   const choices = [{ id: null, label: 'Все' }, ...CATEGORIES];
   const buttons = choices.map((choice) =>
     el(
@@ -142,10 +206,10 @@ export function createCategoryTabs({ label, selected = null, onSelect }) {
   );
   const list = el(
     'div',
-    { class: 'tabs category-tabs__list', role: 'group', 'aria-label': label },
+    { class: 'tabs tabs--scroll category-tabs__list', role: 'group', 'aria-label': label },
     buttons,
   );
-  const element = el('div', { class: 'category-tabs' }, list);
+  const element = el('div', { class: `category-tabs ${className}`.trim() }, list);
 
   function updateEdges() {
     const hiddenAfter = list.scrollWidth - list.clientWidth - list.scrollLeft;
@@ -154,9 +218,9 @@ export function createCategoryTabs({ label, selected = null, onSelect }) {
   }
 
   function revealButton(button) {
-    const edgeInset = buttons[0].offsetLeft;
-    const start = button.offsetLeft - edgeInset;
-    const end = button.offsetLeft + button.offsetWidth + edgeInset;
+    const peek = Number.parseFloat(window.getComputedStyle(list).scrollPaddingLeft) || 0;
+    const start = button.offsetLeft - peek;
+    const end = button.offsetLeft + button.offsetWidth + peek;
     if (start < list.scrollLeft) list.scrollLeft = start;
     else if (end > list.scrollLeft + list.clientWidth) list.scrollLeft = end - list.clientWidth;
   }
@@ -174,31 +238,9 @@ export function createCategoryTabs({ label, selected = null, onSelect }) {
     revealSelected();
   }
 
-  function balanceRows() {
-    const style = window.getComputedStyle(list);
-    const inlinePadding =
-      Number.parseFloat(style.paddingInlineStart) + Number.parseFloat(style.paddingInlineEnd);
-    const balancedWidth =
-      style.flexWrap === 'wrap'
-        ? findBalancedRowWidth(
-            buttons.map((button) => button.getBoundingClientRect().width),
-            Number.parseFloat(style.columnGap) || 0,
-            element.clientWidth - inlinePadding,
-          )
-        : null;
-    if (balancedWidth === null) element.style.removeProperty(BALANCED_WIDTH_PROPERTY);
-    else element.style.setProperty(BALANCED_WIDTH_PROPERTY, `${balancedWidth + inlinePadding}px`);
-  }
-
-  function handleResize() {
-    balanceRows();
-    revealSelected();
-  }
-
   const stopScroll = listen(list, 'scroll', updateEdges, { passive: true });
-  const stopWindowResize = listen(window, 'resize', handleResize);
-  const observer = new ResizeObserver(handleResize);
-  buttons.forEach((button) => observer.observe(button));
+  const observer = new ResizeObserver(revealSelected);
+  [list, ...buttons].forEach((target) => observer.observe(target));
   setSelected(selected);
 
   return {
@@ -206,7 +248,6 @@ export function createCategoryTabs({ label, selected = null, onSelect }) {
     setSelected,
     dispose() {
       stopScroll();
-      stopWindowResize();
       observer.disconnect();
     },
   };
